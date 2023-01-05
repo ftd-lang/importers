@@ -213,7 +213,7 @@ impl MDBook {
                 preprocessed_book = preprocessor.run(&preprocess_ctx, preprocessed_book)?;
             }
         }
-
+        //dbg!(&preprocessed_book);
         let name = renderer.name();
         let build_dir = self.build_dir_for(name);
 
@@ -223,6 +223,7 @@ impl MDBook {
             self.config.clone(),
             build_dir,
         );
+        //dbg!(&render_context);
         render_context
             .chapter_titles
             .extend(preprocess_ctx.chapter_titles.borrow_mut().drain());

@@ -26,7 +26,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     if args.get_flag("open") {
         // FIXME: What's the right behaviour if we don't use the HTML renderer?
-        let path = book.build_dir_for("html").join("index.html");
+        let path = book.build_dir_for("html").join("index.ftd");
         dbg!(&path);
         if !path.exists() {
             error!("No chapter available to open");

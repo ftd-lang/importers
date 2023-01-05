@@ -23,6 +23,6 @@ fn mdbook_cli_dummy_book_generates_index_html() {
     // exists afterward
     assert!(temp.path().join("book").exists());
 
-    let index_file = temp.path().join("book/index.html");
+    let index_file = temp.path().join("book/index.ftd");
     assert!(index_file.exists());
 }

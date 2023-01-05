@@ -44,8 +44,8 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
     if index.len() > 10_000_000 {
         warn!("searchindex.json is very large ({} bytes)", index.len());
     }
-
-    if search_config.copy_js {
+//commented for ftd
+    /*if search_config.copy_js {
         utils::fs::write_file(destination, "searchindex.json", index.as_bytes())?;
         utils::fs::write_file(
             destination,
@@ -56,7 +56,7 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
         utils::fs::write_file(destination, "mark.min.js", searcher::MARK_JS)?;
         utils::fs::write_file(destination, "elasticlunr.min.js", searcher::ELASTICLUNR_JS)?;
         debug!("Copying search files ✓");
-    }
+    }*/
 
     Ok(())
 }

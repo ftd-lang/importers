@@ -190,6 +190,7 @@ pub fn new_cmark_parser(text: &str, curly_quotes: bool) -> Parser<'_, '_> {
 }
 
 pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&Path>) -> String {
+    //dbg!(&text);
     let mut s = String::with_capacity(text.len() * 3 / 2);
     let p = new_cmark_parser(text, curly_quotes);
     let events = p
@@ -199,7 +200,6 @@ pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&P
             let (a, b) = wrap_tables(event);
             a.into_iter().chain(b)
         });
-
     html::push_html(&mut s, events);
     s
 }

@@ -92,7 +92,7 @@ impl HtmlHandlebars {
         } else {
             ch.name.clone() + " - " + book_title
         };
-
+//dbg!(&content);
         ctx.data.insert("path".to_owned(), json!(path));
         ctx.data.insert("content".to_owned(), json!(content));
         ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
@@ -107,22 +107,26 @@ impl HtmlHandlebars {
         }
 
         // Render the handlebars template with the data
-        debug!("Render template");
-        let rendered = ctx.handlebars.render("index", &ctx.data)?;
+        //debug!("Render template");
+        //let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
-        let rendered = self.post_process(rendered, &ctx.html_config.playground, ctx.edition);
+        //let rendered = self.post_process(rendered, &ctx.html_config.playground, ctx.edition);
 
         // Write to file
-        debug!("Creating {}", filepath.display());
-        utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
+        
+        //dbg!("Creating {}", filepath.display());
+        //utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
 
         if ctx.is_index {
             ctx.data.insert("path".to_owned(), json!("index.md"));
             ctx.data.insert("path_to_root".to_owned(), json!(""));
             ctx.data.insert("is_index".to_owned(), json!(true));
+           // dbg!(&ctx.data);
             let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
+            //dbg!(&rendered_index);
             let rendered_index =
                 self.post_process(rendered_index, &ctx.html_config.playground, ctx.edition);
+            
             debug!("Creating index.html from {}", ctx_path);
             utils::fs::write_file(&ctx.destination, "index.ftd", rendered_index.as_bytes())?;
         }
@@ -180,13 +184,13 @@ impl HtmlHandlebars {
             title.push_str(book_title);
         }
         data_404.insert("title".to_owned(), json!(title));
-        let rendered = handlebars.render("index", &data_404)?;
+        //let rendered = handlebars.render("index", &data_404)?;
 
-        let rendered =
+        /*let rendered =
             self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
         let output_file = get_404_output_file(&html_config.input_404);
         utils::fs::write_file(destination, output_file, rendered.as_bytes())?;
-        debug!("Creating 404.html ✓");
+        debug!("Creating 404.html ✓");*/
         Ok(())
     }
 
@@ -197,10 +201,14 @@ impl HtmlHandlebars {
         playground_config: &Playground,
         edition: Option<RustEdition>,
     ) -> String {
+        //dbg!(&rendered);
         let rendered = build_header_links(&rendered);
+        let rendered = replace_paragraph_with_markdown(&rendered);
+        //dbg!("headers",&rendered);
         let rendered = fix_code_blocks(&rendered);
+        //dbg!("block",&rendered);
         let rendered = add_playground_pre(&rendered, playground_config, edition);
-
+        //dbg!(&rendered);
         rendered
     }
 
@@ -213,6 +221,24 @@ impl HtmlHandlebars {
         use crate::utils::fs::write_file;
 
         write_file(
+            destination,
+            "FPM.ftd",
+            b"-- import: fpm
+
+            -- fpm.package: wasif1024.github.io/fpm-site
+            download-base-url: https://raw.githubusercontent.com/wasif1024/fpm-site/main
+            
+            -- fpm.dependency: fifthtry.github.io/doc-site as ds
+            
+            -- fpm.auto-import: ds
+            
+            -- fpm.sitemap:
+            
+            # Home: /
+            nav-title: Home
+            data: Section Data",
+        )?;
+        /*write_file(
             destination,
             ".nojekyll",
             b"This file makes sure that Github Pages doesn't process mdBook's output.\n",
@@ -308,7 +334,7 @@ impl HtmlHandlebars {
                 "theme-tomorrow_night.js",
                 playground_editor::THEME_TOMORROW_NIGHT_JS,
             )?;
-        }
+        }*/
 
         Ok(())
     }
@@ -469,14 +495,14 @@ impl Renderer for HtmlHandlebars {
     }
 
     fn render(&self, ctx: &RenderContext) -> Result<()> {
-        dbg!("render here");
+        //dbg!("render here");
         let book_config = &ctx.config.book;
         let html_config = ctx.config.html_config().unwrap_or_default();
         let src_dir = ctx.root.join(&ctx.config.book.src);
         let destination = &ctx.destination;
         let book = &ctx.book;
         let build_dir = ctx.root.join(&ctx.config.build.build_dir);
-
+        
         if destination.exists() {
             utils::fs::remove_dir_content(destination)
                 .with_context(|| "Unable to remove stale HTML output")?;
@@ -523,9 +549,11 @@ impl Renderer for HtmlHandlebars {
 
         debug!("Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars, &html_config);
-
+        //dbg!("html_config",&html_config);
+        //dbg!("handle-bars",&handlebars);
+        //dbg!("Mdbook",&book);
         let mut data = make_data(&ctx.root, book, &ctx.config, &html_config, &theme)?;
-
+        //dbg!(&data);
         // Print version
         let mut print_content = String::new();
 
@@ -561,7 +589,8 @@ impl Renderer for HtmlHandlebars {
         }
 
         // Render the handlebars template with the data
-        if html_config.print.enable {
+        //commented for ftd
+        /*if html_config.print.enable {
             debug!("Render template");
             let rendered = handlebars.render("index", &data)?;
 
@@ -570,14 +599,14 @@ impl Renderer for HtmlHandlebars {
 
             utils::fs::write_file(destination, "print.html", rendered.as_bytes())?;
             debug!("Creating print.html ✓");
-        }
+        }*/
 
         debug!("Copy static files");
         self.copy_static_files(destination, &theme, &html_config)
             .with_context(|| "Unable to copy across static files")?;
-        self.copy_additional_css_and_js(&html_config, &ctx.root, destination)
+        /*self.copy_additional_css_and_js(&html_config, &ctx.root, destination)
             .with_context(|| "Unable to copy across additional CSS and JS")?;
-
+*/
         // Render search index
         #[cfg(feature = "search")]
         {
@@ -605,7 +634,7 @@ fn make_data(
     theme: &Theme,
 ) -> Result<serde_json::Map<String, serde_json::Value>> {
     trace!("make_data");
-    dbg!("make data");
+    //dbg!("make data");
     let mut data = serde_json::Map::new();
     data.insert(
         "language".to_owned(),
@@ -619,7 +648,7 @@ fn make_data(
         "description".to_owned(),
         json!(config.book.description.clone().unwrap_or_default()),
     );
-    if theme.favicon_png.is_some() {
+    /*if theme.favicon_png.is_some() {
         data.insert("favicon_png".to_owned(), json!("favicon.png"));
     }
     if theme.favicon_svg.is_some() {
@@ -630,10 +659,10 @@ fn make_data(
             "live_reload_endpoint".to_owned(),
             json!(live_reload_endpoint),
         );
-    }
+    }*/
 
     // TODO: remove default_theme in 0.5, it is not needed.
-    let default_theme = match html_config.default_theme {
+    /*let default_theme = match html_config.default_theme {
         Some(ref theme) => theme.to_lowercase(),
         None => "light".to_string(),
     };
@@ -659,10 +688,10 @@ fn make_data(
 
     if html_config.copy_fonts {
         data.insert("copy_fonts".to_owned(), json!(true));
-    }
+    }*/
 
     // Add check to see if there is an additional style
-    if !html_config.additional_css.is_empty() {
+    /*if !html_config.additional_css.is_empty() {
         let mut css = Vec::new();
         for style in &html_config.additional_css {
             match style.strip_prefix(root) {
@@ -671,10 +700,10 @@ fn make_data(
             }
         }
         data.insert("additional_css".to_owned(), json!(css));
-    }
+    }*/
 
     // Add check to see if there is an additional script
-    if !html_config.additional_js.is_empty() {
+    /*if !html_config.additional_js.is_empty() {
         let mut js = Vec::new();
         for script in &html_config.additional_js {
             match script.strip_prefix(root) {
@@ -693,13 +722,13 @@ fn make_data(
     }
     if html_config.playground.copyable {
         data.insert("playground_copyable".to_owned(), json!(true));
-    }
+    }*/
 
     data.insert("print_enable".to_owned(), json!(html_config.print.enable));
     data.insert("fold_enable".to_owned(), json!(html_config.fold.enable));
     data.insert("fold_level".to_owned(), json!(html_config.fold.level));
 
-    let search = html_config.search.clone();
+    /*let search = html_config.search.clone();
     if cfg!(feature = "search") {
         let search = search.unwrap_or_default();
         data.insert("search_enabled".to_owned(), json!(search.enable));
@@ -723,7 +752,7 @@ fn make_data(
         Some(ref git_repository_icon) => git_repository_icon,
         None => "fa-github",
     };
-    data.insert("git_repository_icon".to_owned(), json!(git_repository_icon));
+    data.insert("git_repository_icon".to_owned(), json!(git_repository_icon));*/
 
     let mut chapters = vec![];
 
@@ -760,9 +789,10 @@ fn make_data(
 
         chapters.push(chapter);
     }
-
+//dbg!(&chapters);
     data.insert("chapters".to_owned(), json!(chapters));
-
+    //dbg!("data json");
+    //dbg!(&data);
     debug!("[*]: JSON constructed");
     Ok(data)
 }
@@ -777,6 +807,7 @@ fn build_header_links(html: &str) -> String {
 
     BUILD_HEADER_LINKS
         .replace_all(html, |caps: &Captures<'_>| {
+            //dbg!(&caps);
             let level = caps[1]
                 .parse()
                 .expect("Regex should ensure we only ever get numbers here");
@@ -786,6 +817,18 @@ fn build_header_links(html: &str) -> String {
         .into_owned()
 }
 
+fn replace_paragraph_with_markdown(html: &str) -> String {
+//dbg!(&html);
+    static PARAGRAPH_ELEMENTS: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r#"<p>(.*?)</p>"#).unwrap());
+        PARAGRAPH_ELEMENTS
+        .replace_all(html, |caps: &Captures<'_>| {
+            //dbg!(&caps);
+
+                insert_markdown_into_paragraph(&caps[1])
+        })
+        .into_owned()
+}
 /// Insert a sinle link into a header, making sure each link gets its own
 /// unique ID by appending an auto-incremented number (if necessary).
 fn insert_link_into_header(
@@ -793,16 +836,43 @@ fn insert_link_into_header(
     content: &str,
     id_counter: &mut HashMap<String, usize>,
 ) -> String {
+    //dbg!(&content);
     let id = utils::unique_id_from_content(content, id_counter);
 
-    format!(
+    /*format!(
         r##"<h{level} id="{id}"><a class="header" href="#{id}">{text}</a></h{level}>"##,
         level = level,
         id = id,
         text = content
+    )*/
+    format!(
+        r##"-- ft.page: {id}
+
+        -- ft.h{level}: {id}
+        "##,
+        level = level,
+        id = id,
+    )
+
+}
+fn insert_markdown_into_paragraph(
+    content: &str,
+) -> String {
+    dbg!(&content);
+    /*format!(
+        r##"<h{level} id="{id}"><a class="header" href="#{id}">{text}</a></h{level}>"##,
+        level = level,
+        id = id,
+        text = content
+    )*/
+    format!(
+        r##"-- ft.markdown: 
+        
+        {text}
+        "##,
+        text = content
     )
 }
-
 // The rust book uses annotations for rustdoc to test code snippets,
 // like the following:
 // ```rust,should_panic

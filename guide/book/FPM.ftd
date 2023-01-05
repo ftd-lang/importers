@@ -1,0 +1,14 @@
+-- import: fpm
+
+-- fpm.package: wasif1024.github.io/fpm-site
+            download-base-url: https://raw.githubusercontent.com/wasif1024/fpm-site/main
+            
+            -- fpm.dependency: fifthtry.github.io/doc-site as ds
+            
+            -- fpm.auto-import: ds
+            
+            -- fpm.sitemap:
+            
+            # Home: /
+            nav-title: Home
+            data: Section Data

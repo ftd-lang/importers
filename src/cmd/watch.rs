@@ -31,7 +31,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     if args.get_flag("open") {
         book.build()?;
-        let path = book.build_dir_for("html").join("index.html");
+        let path = book.build_dir_for("html").join("index.ftd");
         if !path.exists() {
             error!("No chapter available to open");
             std::process::exit(1)

@@ -72,7 +72,7 @@ impl HtmlHandlebars {
         let ctx_path = path
             .to_str()
             .with_context(|| "Could not convert path to str")?;
-        let filepath = Path::new(&ctx_path).with_extension("html");
+        let filepath = Path::new(&ctx_path).with_extension("ftd");
 
         // "print.html" is used for the print page.
         if path == Path::new("print.md") {
@@ -108,14 +108,14 @@ impl HtmlHandlebars {
 
         // Render the handlebars template with the data
         //debug!("Render template");
-        //let rendered = ctx.handlebars.render("index", &ctx.data)?;
+        let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
-        //let rendered = self.post_process(rendered, &ctx.html_config.playground, ctx.edition);
-
+        let rendered = self.post_process(rendered, &ctx.html_config.playground, ctx.edition);
+dbg!(&filepath);
         // Write to file
         
         //dbg!("Creating {}", filepath.display());
-        //utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
+        utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
 
         if ctx.is_index {
             ctx.data.insert("path".to_owned(), json!("index.md"));
@@ -201,7 +201,7 @@ impl HtmlHandlebars {
         playground_config: &Playground,
         edition: Option<RustEdition>,
     ) -> String {
-        //dbg!(&rendered);
+        dbg!(&rendered);
         let rendered = build_header_links(&rendered);
         let rendered = replace_paragraph_with_markdown(&rendered);
         //dbg!("headers",&rendered);
@@ -859,15 +859,8 @@ fn insert_markdown_into_paragraph(
     content: &str,
 ) -> String {
     dbg!(&content);
-    /*format!(
-        r##"<h{level} id="{id}"><a class="header" href="#{id}">{text}</a></h{level}>"##,
-        level = level,
-        id = id,
-        text = content
-    )*/
     format!(
         r##"-- ft.markdown: 
-        
         {text}
         "##,
         text = content

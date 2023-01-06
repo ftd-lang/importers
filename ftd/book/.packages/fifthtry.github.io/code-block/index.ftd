@@ -1,0 +1,278 @@
+-- import: fpm
+-- import: fifthtry.github.io/code-block/assets
+-- import: fifthtry.github.io/typography as tf
+
+-- ftd.column:
+id: code-wrap
+width: fill
+align: center
+spacing: 20
+padding-horizontal: 50
+padding-vertical: 20
+background-color: $fpm.color.main.background.base
+
+-- package: Code Block Component for FPM Packages
+name: fifthtry.github.io/code-block
+
+This package can be used to show source code in any document.
+
+-- ftd.text: Output on browser will as below:
+padding-top: 20
+
+
+-- h2: How to add: onto your project:
+
+
+-- ftd.column:
+width: percent 50
+
+-- code: Add this to FPM.ftd
+lang: ftd
+
+\-- fpm.dependency: fifthtry.github.io/code-block as cb
+
+
+-- code: Then use the component:
+lang: ftd
+
+\-- fpm.dependency: fifthtry.github.io/code-block as cb
+
+\-- import: cb
+
+\-- cb.code:
+if: $caption is not null
+caption: $caption
+lang: $lang
+
+$body
+
+-- ftd.text: `lang` is the file name extension.
+
+-- ftd.text: `caption` is the the title/caption of code block.
+role: $fpm.type.copy-relaxed
+padding-bottom: 10
+
+-- ftd.text: `lang` is the file name extension.
+role: $fpm.type.copy-relaxed
+padding-bottom: 10
+
+-- ftd.text: `body` is main body of the code block.
+role: $fpm.type.copy-relaxed
+padding-bottom: 10
+
+-- h2: Usage: how to write
+
+-- code: How to write code block of image shown above
+lang: ftd
+
+\-- cb.code: hello world ftd
+lang: ftd
+
+\-- string msg: hello world
+\-- ftd.text: $msg
+
+
+-- h2: Output: of above code snippet
+
+-- code: hello world ftd
+lang: ftd
+
+\-- string msg: hello world
+\-- ftd.text: $msg
+
+
+
+
+
+
+
+
+
+
+-- ftd.column code:
+optional caption caption:
+body body:
+string lang:
+width: fill
+margin-top: 16
+margin-bottom: 16
+
+--- ftd.text:
+text: $caption
+if: $caption is not null
+role: $fpm.type.copy-relaxed
+color: $fpm.color.main.text
+width: fill
+background-color: $fpm.color.main.background.step-2
+padding-top: 10
+padding-bottom: 10
+padding-left: 20
+padding-right: 20
+border-top-radius: 4
+
+--- ftd.code:
+text: $body
+lang: $lang
+width: fill
+role: $fpm.type.copy-relaxed
+color: $fpm.color.main.text
+padding-top: 10
+padding-left: 20
+padding-bottom: 10
+padding-right: 20
+background-color: $fpm.color.main.background.code
+border-top-radius if $caption is null: 4
+border-bottom-radius: 4
+border-width: 1
+border-color: $fpm.color.main.border
+overflow-x: auto
+
+
+
+
+
+
+
+
+
+
+-- ftd.column h1:
+caption title:
+optional body body:
+boolean open: true
+append-at: inner
+width: fill
+region: h1
+padding-left: 20
+border-left: 5
+border-color: $fpm.color.main.cta-secondary.text
+move-left: 25
+margin-bottom: 30
+$on-click$: toggle $open
+
+--- ftd.text:
+caption $title:
+text: $title
+region: title
+role: $fpm.type.heading-medium
+color: $fpm.color.main.text
+padding-bottom: 8
+
+
+
+
+
+
+
+
+
+
+-- ftd.column h2:
+caption title:
+optional body body:
+width: fill
+region: h2
+padding-bottom: 12
+
+--- ftd.text:
+caption $title:
+text: $title
+region: title
+role: $fpm.type.heading-small
+color: $fpm.color.main.text
+padding-bottom: 8
+padding-top: 16
+
+
+
+
+
+
+
+
+
+-- ftd.column package:
+caption title:
+string name:
+body body:
+width: fill
+color: $fpm.color.main.text
+spacing: 20
+open: true
+
+--- ftd.row:
+anchor: window
+right: 50
+bottom: 100
+padding: 10
+background-color: $fpm.color.main.background.base
+border-width: 1
+border-color: $fpm.color.main.text
+border-radius: 4
+z-index: 99999999999999
+
+--- toggle:
+
+--- container: ftd.main
+
+--- tf.h0: $title
+
+--- kv: Package Name
+value: $name
+
+--- tf.markdown:
+
+$body
+
+
+
+
+
+
+
+
+
+
+-- ftd.row toggle:
+
+--- ftd.image:
+if: not $ftd.dark-mode
+src: $assets.files.static.icon.svg
+height: 18
+$on-click$: message-host enable-dark-mode
+align: center
+
+--- ftd.image:
+if:  $ftd.dark-mode
+src: $assets.files.static.icon-dark.svg
+height: 18
+$on-click$: message-host enable-light-mode
+align: center
+
+
+
+
+
+
+
+-- ftd.row kv:
+caption title:
+string value:
+padding: 10
+border-width: 1
+border-color: $fpm.color.main.text
+spacing: 7
+width: fill
+background-color: $fpm.color.main.background.base
+border-radius: 4
+color: $fpm.color.main.text
+
+--- ftd.text: $title
+role: $fpm.type.copy-relaxed
+color: $fpm.color.main.text
+
+--- ftd.text: $value
+color: $fpm.color.main.text
+role: $fpm.type.copy-relaxed
+move-down: 2
+

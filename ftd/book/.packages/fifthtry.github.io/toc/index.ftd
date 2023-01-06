@@ -1,0 +1,131 @@
+-- import: fifthtry.github.io/package-doc/doc as pd
+-- import: fifthtry.github.io/package-doc/code-block as cb
+-- import: fpm
+-- import: fifthtry.github.io/toc/assets
+
+
+-- boolean is-mobile: false
+
+-- is-mobile: true
+if: $ftd.device == mobile
+
+-- ftd.column:
+width: fill
+padding-horizontal: 50
+padding-horizontal if $is-mobile: 20
+background-color: $fpm.color.main.background.base
+
+
+-- pd.package: TOC
+name: fifthtry.github.io/toc
+
+This component can be used as a site table of contents - links to pages/documents.
+
+
+-- pd.component: TOC
+name: fifthtry.github.io/toc.toc
+
+This is the main toc.
+
+
+How to use?
+
+Add below lines into `FPM.ftd` file:
+
+
+
+-- cb.code:
+lang: ftd
+
+\-- fpm.dependency: fifthtry.github.io/toc as toc
+
+\-- fpm.auto-import: toc
+
+
+
+-- pd.hidden-code: toc definitions
+
+\-- fpm.toc-item list empty-toc:
+
+\-- fpm.toc-item list toc-top-right:
+$processor$: toc
+
+- Roadmap: /roadmap/
+- Journal: 
+  - Home Index: /index/
+  - Docs: /index/
+  - Articles: /index/
+  - Home Pictures: /index/
+
+
+
+
+
+
+
+-- pd.output: Basic usage example
+reference: $assets.files.static.toc.toc.png
+reference-width: 300
+
+\--- toc:
+toc-obj: $toc
+
+
+\--- toc:
+toc-obj: $toc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- ftd.column toc:
+fpm.toc-item list toc-obj:
+ftd.color border-color: $fpm.color.main.text
+ftd.color bg-color: $fpm.color.main.background.base
+string toc-width: 300
+ftd.color text-color: $fpm.color.main.text
+width: $toc-width
+background-color:  $fpm.color.main.background.base
+
+--- toc-instance:
+$loop$: $toc-obj as $obj
+toc: $obj
+text-color: $text-color
+
+
+
+
+
+
+
+
+-- ftd.column toc-instance:
+fpm.toc-item toc:
+ftd.color text-color: $fpm.color.main.text
+padding-left: 10
+padding-top: 2
+padding-bottom: 2
+
+--- ftd.text:
+link: $toc.url
+text: $toc.title
+role: $fpm.type.label-big
+min-width: fit-content
+padding-left: 10
+padding-top: 3
+padding-bottom: 3
+color: $text-color
+
+--- toc-instance:
+$loop$: $toc.children as $obj
+toc: $obj

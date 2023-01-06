@@ -3,7 +3,7 @@ use crate::config::{BookConfig, Config, HtmlConfig, Playground, RustEdition};
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
-use crate::theme::{self, playground_editor, Theme};
+use crate::theme::{self, Theme};
 use crate::utils;
 
 use std::borrow::Cow;
@@ -12,7 +12,6 @@ use std::collections::HashMap;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 
-use crate::utils::fs::get_404_output_file;
 use handlebars::Handlebars;
 use log::{debug, trace, warn};
 use once_cell::sync::Lazy;
@@ -110,7 +109,7 @@ impl HtmlHandlebars {
         //debug!("Render template");
         let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
-        let rendered = self.post_process(rendered, &ctx.html_config.playground, ctx.edition);
+        let rendered = self.post_process(rendered, &ctx.html_config.playground, ctx.edition,&title);
 //dbg!(&filepath);
         // Write to file
         
@@ -125,7 +124,7 @@ impl HtmlHandlebars {
             let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
             //dbg!(&rendered_index);
             let rendered_index =
-                self.post_process(rendered_index, &ctx.html_config.playground, ctx.edition);
+                self.post_process(rendered_index, &ctx.html_config.playground, ctx.edition,&title);
             
             debug!("Creating index.html from {}", ctx_path);
             utils::fs::write_file(&ctx.destination, "index.ftd", rendered_index.as_bytes())?;
@@ -199,11 +198,12 @@ impl HtmlHandlebars {
         &self,
         rendered: String,
         playground_config: &Playground,
-        edition: Option<RustEdition>,
+        edition: Option<RustEdition>,title:&String
     ) -> String {
         //dbg!(&rendered);
+        let rendered = embed_title(&rendered,&title);
         let rendered = build_header_links(&rendered);
-        let rendered = replace_paragraph_with_markdown(&rendered);
+        let rendered = build_paragraph_with_markdown(&rendered);
         //dbg!("headers",&rendered);
         let rendered = fix_code_blocks(&rendered);
         //dbg!("block",&rendered);
@@ -816,8 +816,14 @@ fn build_header_links(html: &str) -> String {
         })
         .into_owned()
 }
-
-fn replace_paragraph_with_markdown(html: &str) -> String {
+fn embed_title(html: &str,title:&String) -> String {
+    static BUILD_HEADER_LINKS: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"<title>(.*?)</title>").unwrap());
+    BUILD_HEADER_LINKS
+        .replace_all(html, title)
+        .into_owned()
+}
+fn build_paragraph_with_markdown(html: &str) -> String {
 //dbg!(&html);
     static PARAGRAPH_ELEMENTS: Lazy<Regex> =
         Lazy::new(|| Regex::new(r#"<p>(.*?)</p>"#).unwrap());
@@ -846,17 +852,8 @@ fn insert_link_into_header(
     //dbg!(&content);
     let id = utils::unique_id_from_content(content, id_counter);
 
-    /*format!(
-        r##"<h{level} id="{id}"><a class="header" href="#{id}">{text}</a></h{level}>"##,
-        level = level,
-        id = id,
-        text = content
-    )*/
     format!(
-        r##"-- ft.page: {id}
-
-        -- ft.h{level}: {id}
-        "##,
+        r##"-- ds.h{level}: {id}"##,
         level = level,
         id = id,
     )
@@ -867,7 +864,7 @@ fn insert_markdown_into_paragraph(
 ) -> String {
     //dbg!(&content);
     format!(
-        r##"-- ft.markdown: 
+        r##"-- ds.markdown: 
 
         {text}
         "##,

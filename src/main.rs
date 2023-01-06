@@ -26,14 +26,7 @@ fn main() {
 
     // Check which subcommand the user ran...
     let res = match command.get_matches().subcommand() {
-        Some(("init", sub_matches)) => cmd::init::execute(sub_matches),
         Some(("build", sub_matches)) => cmd::build::execute(sub_matches),
-        Some(("clean", sub_matches)) => cmd::clean::execute(sub_matches),
-        #[cfg(feature = "watch")]
-        Some(("watch", sub_matches)) => cmd::watch::execute(sub_matches),
-        #[cfg(feature = "serve")]
-        Some(("serve", sub_matches)) => cmd::serve::execute(sub_matches),
-        Some(("test", sub_matches)) => cmd::test::execute(sub_matches),
         Some(("completions", sub_matches)) => (|| {
             let shell = sub_matches
                 .get_one::<Shell>("shell")
@@ -70,10 +63,7 @@ fn create_clap_command() -> Command {
             "For more information about a specific command, try `mdbook <command> --help`\n\
              The source code for mdBook is available at: https://github.com/rust-lang/mdBook",
         )
-        .subcommand(cmd::init::make_subcommand())
         .subcommand(cmd::build::make_subcommand())
-        .subcommand(cmd::test::make_subcommand())
-        .subcommand(cmd::clean::make_subcommand())
         .subcommand(
             Command::new("completions")
                 .about("Generate shell completions for your shell to stdout")
@@ -86,10 +76,6 @@ fn create_clap_command() -> Command {
                 ),
         );
 
-    #[cfg(feature = "watch")]
-    let app = app.subcommand(cmd::watch::make_subcommand());
-    #[cfg(feature = "serve")]
-    let app = app.subcommand(cmd::serve::make_subcommand());
 
     app
 }

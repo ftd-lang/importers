@@ -29,7 +29,7 @@ use std::process::{Child, Command, Stdio};
 ///
 /// An example preprocessor is available in this project's `examples/`
 /// directory.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Eq,PartialEq)]
 pub struct CmdPreprocessor {
     name: String,
     cmd: String,

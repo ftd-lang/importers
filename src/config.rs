@@ -396,7 +396,7 @@ fn is_legacy_format(table: &Value) -> bool {
 
 /// Configuration options which are specific to the book and required for
 /// loading it from disk.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct BookConfig {
     /// The book's title.
@@ -427,7 +427,7 @@ impl Default for BookConfig {
 }
 
 /// Configuration for the build procedure.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct BuildConfig {
     /// Where to put built artefacts relative to the book's root directory.
@@ -454,14 +454,14 @@ impl Default for BuildConfig {
 }
 
 /// Configuration for the Rust compiler(e.g., for playground)
-#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct RustConfig {
     /// Rust edition used in playground
     pub edition: Option<RustEdition>,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 /// Rust edition to use for the code.
 pub enum RustEdition {
     /// The 2021 edition of Rust
@@ -476,7 +476,7 @@ pub enum RustEdition {
 }
 
 /// Configuration for the HTML renderer.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct HtmlConfig {
     /// The theme directory, if specified.
@@ -583,7 +583,7 @@ impl HtmlConfig {
 }
 
 /// Configuration for how to render the print icon, print.html, and print.css.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Print {
     /// Whether print support is enabled.
@@ -602,7 +602,7 @@ impl Default for Print {
 }
 
 /// Configuration for how to fold chapters of sidebar.
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Fold {
     /// When off, all folds are open. Default: `false`.
@@ -614,7 +614,7 @@ pub struct Fold {
 }
 
 /// Configuration for tweaking how the the HTML renderer handles the playground.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Playground {
     /// Should playground snippets be editable? Default: `false`.
@@ -643,7 +643,7 @@ impl Default for Playground {
 }
 
 /// Configuration of the search functionality of the HTML renderer.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Search {
     /// Enable the search feature. Default: `true`.

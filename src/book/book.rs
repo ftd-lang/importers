@@ -20,17 +20,41 @@ pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> 
     File::open(&summary_md)
         .with_context(|| format!("Couldn't open SUMMARY.md in {:?} directory", src_dir))?
         .read_to_string(&mut summary_content)?;
+//dbg!(&summary_content);
 
     let summary = parse_summary(&summary_content)
         .with_context(|| format!("Summary parsing failed for file={:?}", summary_md))?;
-
+//dbg!(&summary);
     if cfg.create_missing {
         create_missing(src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
     }
-
+    //create_fpm_ftd(&summary_content,&src_dir).with_context(|| "Unable to copy across static files")?;
     load_book_from_disk(&summary, src_dir)
 }
+fn create_fpm_ftd(summary_content:&String,src_dir: &Path) -> Result<()> {
+    //dbg!(&src_dir);
+    //dbg!(&summary_content);
+    let fpm_ftd_string=format!("{}{}",String::from("-- import: fpm
 
+    -- fpm.package: wasif1024.github.io/fpm-site
+    download-base-url: https://raw.githubusercontent.com/wasif1024/fpm-site/main
+    
+    -- fpm.dependency: fifthtry.github.io/doc-site as ds
+    
+    -- fpm.auto-import: ds
+    
+    -- fpm.sitemap:
+    "),&summary_content);
+
+    use crate::utils::fs::write_file;
+
+        write_file(
+            src_dir,
+            "FPM.ftd",
+            fpm_ftd_string.as_bytes(),
+        )?;
+        Ok(())
+}
 fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
     let mut items: Vec<_> = summary
         .prefix_chapters

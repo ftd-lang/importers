@@ -111,7 +111,7 @@ impl HtmlHandlebars {
         let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
         let rendered = self.post_process(rendered, &ctx.html_config.playground, ctx.edition);
-dbg!(&filepath);
+//dbg!(&filepath);
         // Write to file
         
         //dbg!("Creating {}", filepath.display());
@@ -142,7 +142,7 @@ dbg!(&filepath);
         handlebars: &mut Handlebars<'_>,
         data: &mut serde_json::Map<String, serde_json::Value>,
     ) -> Result<()> {
-        let destination = &ctx.destination;
+        //let destination = &ctx.destination;
         let content_404 = if let Some(ref filename) = html_config.input_404 {
             let path = src_dir.join(filename);
             std::fs::read_to_string(&path)
@@ -201,29 +201,29 @@ dbg!(&filepath);
         playground_config: &Playground,
         edition: Option<RustEdition>,
     ) -> String {
-        dbg!(&rendered);
+        //dbg!(&rendered);
         let rendered = build_header_links(&rendered);
         let rendered = replace_paragraph_with_markdown(&rendered);
         //dbg!("headers",&rendered);
         let rendered = fix_code_blocks(&rendered);
         //dbg!("block",&rendered);
         let rendered = add_playground_pre(&rendered, playground_config, edition);
-        //dbg!(&rendered);
+        dbg!(&rendered);
+        let rendered = remove_whitespaces(&rendered);
+        dbg!(&rendered);
         rendered
     }
 
     fn copy_static_files(
         &self,
         destination: &Path,
-        theme: &Theme,
-        html_config: &HtmlConfig,
     ) -> Result<()> {
         use crate::utils::fs::write_file;
 
         write_file(
             destination,
             "FPM.ftd",
-            b"-- import: fpm
+            remove_whitespaces("-- import: fpm
 
             -- fpm.package: wasif1024.github.io/fpm-site
             download-base-url: https://raw.githubusercontent.com/wasif1024/fpm-site/main
@@ -237,7 +237,7 @@ dbg!(&filepath);
             # Home: /
             nav-title: Home
             data: Section Data",
-        )?;
+        ).as_bytes())?;
         /*write_file(
             destination,
             ".nojekyll",
@@ -372,7 +372,7 @@ dbg!(&filepath);
 
     /// Copy across any additional CSS and JavaScript files which the book
     /// has been configured to use.
-    fn copy_additional_css_and_js(
+    /*fn copy_additional_css_and_js(
         &self,
         html: &HtmlConfig,
         root: &Path,
@@ -405,7 +405,7 @@ dbg!(&filepath);
         }
 
         Ok(())
-    }
+    }*/
 
     fn emit_redirects(
         &self,
@@ -602,7 +602,7 @@ impl Renderer for HtmlHandlebars {
         }*/
 
         debug!("Copy static files");
-        self.copy_static_files(destination, &theme, &html_config)
+        self.copy_static_files(destination)
             .with_context(|| "Unable to copy across static files")?;
         /*self.copy_additional_css_and_js(&html_config, &ctx.root, destination)
             .with_context(|| "Unable to copy across additional CSS and JS")?;
@@ -829,6 +829,13 @@ fn replace_paragraph_with_markdown(html: &str) -> String {
         })
         .into_owned()
 }
+fn remove_whitespaces(html: &str)->String{
+    static PARAGRAPH_ELEMENTS: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r#"(?m)^ +| +$| +( )"#).unwrap());
+        PARAGRAPH_ELEMENTS
+        .replace_all(html.trim(),"$1")
+        .into_owned()
+}
 /// Insert a sinle link into a header, making sure each link gets its own
 /// unique ID by appending an auto-incremented number (if necessary).
 fn insert_link_into_header(
@@ -858,9 +865,10 @@ fn insert_link_into_header(
 fn insert_markdown_into_paragraph(
     content: &str,
 ) -> String {
-    dbg!(&content);
+    //dbg!(&content);
     format!(
         r##"-- ft.markdown: 
+
         {text}
         "##,
         text = content

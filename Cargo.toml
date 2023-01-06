@@ -68,6 +68,6 @@ search = ["elasticlunr-rs", "ammonia"]
 doc = false
 name = "mdbook"
 
-[[example]]
-name = "nop-preprocessor"
-test = true
+# [[example]]
+# name = "nop-preprocessor"
+# test = true*/

@@ -589,7 +589,7 @@ fn stringify_events(events: Vec<Event<'_>>) -> String {
 
 /// A section number like "1.2.3", basically just a newtype'd `Vec<u32>` with
 /// a pretty `Display` impl.
-#[derive(Debug, PartialEq, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Eq,PartialEq, Clone, Default, Serialize, Deserialize)]
 pub struct SectionNumber(pub Vec<u32>);
 
 impl Display for SectionNumber {

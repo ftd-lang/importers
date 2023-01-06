@@ -125,7 +125,7 @@ impl RenderContext {
 ///
 /// If the subprocess wishes to indicate that rendering failed, it should exit
 /// with a non-zero return code.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct CmdRenderer {
     name: String,
     cmd: String,

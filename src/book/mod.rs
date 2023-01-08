@@ -1,6 +1,3 @@
-
-//! [1]: ../index.html
-
 #[allow(clippy::module_inception)]
 mod book;
 mod summary;
@@ -9,12 +6,9 @@ pub use self::book::{load_book, Book, BookItem, BookItems, Chapter};
 //pub use self::init::BookBuilder;
 pub use self::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 
-use log::{debug, error, info, log_enabled, trace, warn};
-use std::io::Write;
+use log::{debug, info, log_enabled, trace, warn};
 use std::path::PathBuf;
-use std::process::Command;
 use std::string::ToString;
-use tempfile::Builder as TempFileBuilder;
 use toml::Value;
 use topological_sort::TopologicalSort;
 
@@ -23,9 +17,8 @@ use crate::preprocess::{
     CmdPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext,
 };
 use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer, RenderContext, Renderer};
-use crate::utils;
 
-use crate::config::{Config, RustEdition};
+use crate::config::{Config};
 
 /// The object used to manage and build a book.
 pub struct MDBook {
@@ -172,99 +165,6 @@ impl MDBook {
     pub fn with_preprocessor<P: Preprocessor + 'static>(&mut self, preprocessor: P) -> &mut Self {
         self.preprocessors.push(Box::new(preprocessor));
         self
-    }
-
-    /// Run `rustdoc` tests on the book, linking against the provided libraries.
-    pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
-        // test_chapter with chapter:None will run all tests.
-        self.test_chapter(library_paths, None)
-    }
-
-    /// Run `rustdoc` tests on a specific chapter of the book, linking against the provided libraries.
-    /// If `chapter` is `None`, all tests will be run.
-    pub fn test_chapter(&mut self, library_paths: Vec<&str>, chapter: Option<&str>) -> Result<()> {
-        let library_args: Vec<&str> = (0..library_paths.len())
-            .map(|_| "-L")
-            .zip(library_paths.into_iter())
-            .flat_map(|x| vec![x.0, x.1])
-            .collect();
-
-        let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir()?;
-
-        let mut chapter_found = false;
-
-        // FIXME: Is "test" the proper renderer name to use here?
-        let preprocess_context =
-            PreprocessorContext::new(self.root.clone(), self.config.clone(), "test".to_string());
-
-        let book = LinkPreprocessor::new().run(&preprocess_context, self.book.clone())?;
-        // Index Preprocessor is disabled so that chapter paths continue to point to the
-        // actual markdown files.
-
-        let mut failed = false;
-        for item in book.iter() {
-            if let BookItem::Chapter(ref ch) = *item {
-                let chapter_path = match ch.path {
-                    Some(ref path) if !path.as_os_str().is_empty() => path,
-                    _ => continue,
-                };
-
-                if let Some(chapter) = chapter {
-                    if ch.name != chapter && chapter_path.to_str() != Some(chapter) {
-                        if chapter == "?" {
-                            info!("Skipping chapter '{}'...", ch.name);
-                        }
-                        continue;
-                    }
-                }
-                chapter_found = true;
-                info!("Testing chapter '{}': {:?}", ch.name, chapter_path);
-
-                // write preprocessed file to tempdir
-                let path = temp_dir.path().join(&chapter_path);
-                let mut tmpf = utils::fs::create_file(&path)?;
-                tmpf.write_all(ch.content.as_bytes())?;
-
-                let mut cmd = Command::new("rustdoc");
-                cmd.arg(&path).arg("--test").args(&library_args);
-
-                if let Some(edition) = self.config.rust.edition {
-                    match edition {
-                        RustEdition::E2015 => {
-                            cmd.args(&["--edition", "2015"]);
-                        }
-                        RustEdition::E2018 => {
-                            cmd.args(&["--edition", "2018"]);
-                        }
-                        RustEdition::E2021 => {
-                            cmd.args(&["--edition", "2021"]);
-                        }
-                    }
-                }
-
-                debug!("running {:?}", cmd);
-                let output = cmd.output()?;
-
-                if !output.status.success() {
-                    failed = true;
-                    error!(
-                        "rustdoc returned an error:\n\
-                        \n--- stdout\n{}\n--- stderr\n{}",
-                        String::from_utf8_lossy(&output.stdout),
-                        String::from_utf8_lossy(&output.stderr)
-                    );
-                }
-            }
-        }
-        if failed {
-            bail!("One or more tests failed");
-        }
-        if let Some(chapter) = chapter {
-            if !chapter_found {
-                bail!("Chapter not found: {}", chapter);
-            }
-        }
-        Ok(())
     }
 
 

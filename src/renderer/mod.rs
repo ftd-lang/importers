@@ -195,7 +195,6 @@ impl Renderer for CmdRenderer {
     fn render(&self, ctx: &RenderContext) -> Result<()> {
         info!("Invoking the \"{}\" renderer", self.name);
         //dbg!("came in render");
-        //dbg!(&ctx);
         let _ = fs::create_dir_all(&ctx.destination);
 
         let mut child = match self

@@ -43,7 +43,6 @@ impl Renderer for MarkdownRenderer {
                 }
             }
         }
-
         fs::create_dir_all(&destination)
             .with_context(|| "Unexpected error when constructing destination path")?;
 

@@ -65,7 +65,7 @@ pub fn create_file(path: &Path) -> Result<File> {
     // Construct path
     if let Some(p) = path.parent() {
         trace!("Parent directory is: {:?}", p);
-
+        dbg!(&p);
         fs::create_dir_all(p)?;
     }
 

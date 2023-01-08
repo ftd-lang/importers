@@ -419,7 +419,6 @@ impl Renderer for HtmlHandlebars {
         //dbg!(&data);
         // Print version
         let mut print_content = String::new();
-
         fs::create_dir_all(&destination)
             .with_context(|| "Unexpected error when constructing destination path")?;
 

@@ -1,35 +1,3 @@
-//! ```rust,no_run
-//! use mdbook::MDBook;
-//! use mdbook::config::Config;
-//!
-//! let root_dir = "/path/to/book/root";
-//!
-//! // create a default config and change a couple things
-//! let mut cfg = Config::default();
-//! cfg.book.title = Some("My Book".to_string());
-//! cfg.book.authors.push("Michael-F-Bryan".to_string());
-//!
-//! MDBook::init(root_dir)
-//!     .create_gitignore(true)
-//!     .with_config(cfg)
-//!     .build()
-//!     .expect("Book generation failed");
-//! ```
-//!
-//! You can also load an existing book and build it.
-//!
-//! ```rust,no_run
-//! use mdbook::MDBook;
-//!
-//! let root_dir = "/path/to/book/root";
-//!
-//! let mut md = MDBook::load(root_dir)
-//!     .expect("Unable to load the book");
-//! md.build().expect("Building failed");
-//! ```
-
-#![deny(missing_docs)]
-#![deny(rust_2018_idioms)]
 
 pub mod book;
 pub mod config;

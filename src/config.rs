@@ -1,55 +1,5 @@
-//! Mdbook's configuration system.
-//!
-//! The main entrypoint of the `config` module is the `Config` struct. This acts
-//! essentially as a bag of configuration information, with a couple
-//! pre-determined tables ([`BookConfig`] and [`BuildConfig`]) as well as support
-//! for arbitrary data which is exposed to plugins and alternative backends.
-//!
-//!
-//! # Examples
-//!
-//! ```rust
-//! # use mdbook::errors::*;
-//! use std::path::PathBuf;
-//! use std::str::FromStr;
-//! use mdbook::Config;
-//! use toml::Value;
-//!
-//! # fn run() -> Result<()> {
-//! let src = r#"
-//! [book]
-//! title = "My Book"
-//! authors = ["Michael-F-Bryan"]
-//!
-//! [build]
-//! src = "out"
-//!
-//! [other-table.foo]
-//! bar = 123
-//! "#;
-//!
-//! // load the `Config` from a toml string
-//! let mut cfg = Config::from_str(src)?;
-//!
-//! // retrieve a nested value
-//! let bar = cfg.get("other-table.foo.bar").cloned();
-//! assert_eq!(bar, Some(Value::Integer(123)));
-//!
-//! // Set the `output.html.theme` directory
-//! assert!(cfg.get("output.html").is_none());
-//! cfg.set("output.html.theme", "./themes");
-//!
-//! // then load it again, automatically deserializing to a `PathBuf`.
-//! let got: Option<PathBuf> = cfg.get_deserialized_opt("output.html.theme")?;
-//! assert_eq!(got, Some(PathBuf::from("./themes")));
-//! # Ok(())
-//! # }
-//! # run().unwrap()
-//! ```
 
-#![deny(missing_docs)]
-
-use log::{debug, trace, warn};
+use log::{debug, trace};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use std::env;
@@ -97,39 +47,6 @@ impl Config {
         Config::from_str(&buffer)
     }
 
-    /// Updates the `Config` from the available environment variables.
-    ///
-    /// Variables starting with `MDBOOK_` are used for configuration. The key is
-    /// created by removing the `MDBOOK_` prefix and turning the resulting
-    /// string into `kebab-case`. Double underscores (`__`) separate nested
-    /// keys, while a single underscore (`_`) is replaced with a dash (`-`).
-    ///
-    /// For example:
-    ///
-    /// - `MDBOOK_foo` -> `foo`
-    /// - `MDBOOK_FOO` -> `foo`
-    /// - `MDBOOK_FOO__BAR` -> `foo.bar`
-    /// - `MDBOOK_FOO_BAR` -> `foo-bar`
-    /// - `MDBOOK_FOO_bar__baz` -> `foo-bar.baz`
-    ///
-    /// So by setting the `MDBOOK_BOOK__TITLE` environment variable you can
-    /// override the book's title without needing to touch your `book.toml`.
-    ///
-    /// > **Note:** To facilitate setting more complex config items, the value
-    /// > of an environment variable is first parsed as JSON, falling back to a
-    /// > string if the parse fails.
-    /// >
-    /// > This means, if you so desired, you could override all book metadata
-    /// > when building the book with something like
-    /// >
-    /// > ```text
-    /// > $ export MDBOOK_BOOK='{"title": "My Awesome Book", "authors": ["Michael-F-Bryan"]}'
-    /// > $ mdbook build
-    /// > ```
-    ///
-    /// The latter case may be useful in situations where `mdbook` is invoked
-    /// from a script or CI, where it sometimes isn't possible to update the
-    /// `book.toml` before building.
     pub fn update_from_env(&mut self) {
         debug!("Updating the config from environment variables");
 
@@ -141,7 +58,7 @@ impl Config {
             let parsed_value = serde_json::from_str(&value)
                 .unwrap_or_else(|_| serde_json::Value::String(value.to_string()));
 
-            if key == "book" || key == "build" {
+            if key == "ftd_output" || key == "build" {
                 if let serde_json::Value::Object(ref map) = parsed_value {
                     // To `set` each `key`, we wrap them as `prefix.key`
                     for (k, v) in map {
@@ -156,11 +73,6 @@ impl Config {
         }
     }
 
-    /// Fetch an arbitrary item from the `Config` as a `toml::Value`.
-    ///
-    /// You can use dotted indices to access nested items (e.g.
-    /// `output.html.playground` will fetch the "playground" out of the html output
-    /// table).
     pub fn get(&self, key: &str) -> Option<&Value> {
         self.rest.read(key)
     }
@@ -170,12 +82,6 @@ impl Config {
         self.rest.read_mut(key)
     }
 
-    /// Convenience method for getting the html renderer's configuration.
-    ///
-    /// # Note
-    ///
-    /// This is for compatibility only. It will be removed completely once the
-    /// HTML renderer is refactored to be less coupled to `mdbook` internals.
     #[doc(hidden)]
     pub fn html_config(&self) -> Option<HtmlConfig> {
         match self
@@ -251,38 +157,6 @@ impl Config {
         self.get(&key).and_then(Value::as_table)
     }
 
-    fn from_legacy(mut table: Value) -> Config {
-        let mut cfg = Config::default();
-
-        // we use a macro here instead of a normal loop because the $out
-        // variable can be different types. This way we can make type inference
-        // figure out what try_into() deserializes to.
-        macro_rules! get_and_insert {
-            ($table:expr, $key:expr => $out:expr) => {
-                let got = $table
-                    .as_table_mut()
-                    .and_then(|t| t.remove($key))
-                    .and_then(|v| v.try_into().ok());
-                if let Some(value) = got {
-                    $out = value;
-                }
-            };
-        }
-
-        get_and_insert!(table, "title" => cfg.book.title);
-        get_and_insert!(table, "authors" => cfg.book.authors);
-        get_and_insert!(table, "source" => cfg.book.src);
-        get_and_insert!(table, "description" => cfg.book.description);
-
-        if let Some(dest) = table.delete("output.html.destination") {
-            if let Ok(destination) = dest.try_into() {
-                cfg.build.build_dir = destination;
-            }
-        }
-
-        cfg.rest = table;
-        cfg
-    }
 }
 
 impl Default for Config {
@@ -300,17 +174,6 @@ impl<'de> serde::Deserialize<'de> for Config {
     fn deserialize<D: Deserializer<'de>>(de: D) -> std::result::Result<Self, D::Error> {
         let raw = Value::deserialize(de)?;
 
-        if is_legacy_format(&raw) {
-            warn!("It looks like you are using the legacy book.toml format.");
-            warn!("We'll parse it for now, but you should probably convert to the new format.");
-            warn!("See the mdbook documentation for more details, although as a rule of thumb");
-            warn!("just move all top level configuration entries like `title`, `author` and");
-            warn!("`description` under a table called `[book]`, move the `destination` entry");
-            warn!("from `[output.html]`, renamed to `build-dir`, under a table called");
-            warn!("`[build]`, and it should all work.");
-            warn!("Documentation: http://rust-lang.github.io/mdBook/format/config.html");
-            return Ok(Config::from_legacy(raw));
-        }
 
         use serde::de::Error;
         let mut table = match raw {
@@ -323,7 +186,7 @@ impl<'de> serde::Deserialize<'de> for Config {
         };
 
         let book: BookConfig = table
-            .remove("book")
+            .remove("ftd_output")
             .map(|book| book.try_into().map_err(D::Error::custom))
             .transpose()?
             .unwrap_or_default();
@@ -355,7 +218,7 @@ impl Serialize for Config {
         let mut table = self.rest.clone();
 
         let book_config = Value::try_from(&self.book).expect("should always be serializable");
-        table.insert("book", book_config);
+        table.insert("ftd_output", book_config);
 
         if self.build != BuildConfig::default() {
             let build_config = Value::try_from(&self.build).expect("should always be serializable");
@@ -372,26 +235,8 @@ impl Serialize for Config {
 }
 
 fn parse_env(key: &str) -> Option<String> {
-    key.strip_prefix("MDBOOK_")
+    key.strip_prefix("ftd_")
         .map(|key| key.to_lowercase().replace("__", ".").replace('_', "-"))
-}
-
-fn is_legacy_format(table: &Value) -> bool {
-    let legacy_items = [
-        "title",
-        "authors",
-        "source",
-        "description",
-        "output.html.destination",
-    ];
-
-    for item in &legacy_items {
-        if table.read(item).is_some() {
-            return true;
-        }
-    }
-
-    false
 }
 
 /// Configuration options which are specific to the book and required for
@@ -445,7 +290,7 @@ pub struct BuildConfig {
 impl Default for BuildConfig {
     fn default() -> BuildConfig {
         BuildConfig {
-            build_dir: PathBuf::from("book"),
+            build_dir: PathBuf::from("ftd_output"),
             create_missing: true,
             use_default_preprocessors: true,
             extra_watch_dirs: Vec::new(),

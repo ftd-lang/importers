@@ -1,5 +1,5 @@
 use super::command_prelude::*;
-use crate::{get_book_dir, open};
+use crate::get_book_dir;
 use fpm_importer::errors::Result;
 use fpm_importer::MDBook;
 use std::path::PathBuf;
@@ -24,16 +24,6 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     book.build()?;
 
-    if args.get_flag("open") {
-        // FIXME: What's the right behaviour if we don't use the HTML renderer?
-        let path = book.build_dir_for("html").join("index.ftd");
-        dbg!(&path);
-        if !path.exists() {
-            error!("No chapter available to open");
-            std::process::exit(1)
-        }
-        open(path);
-    }
 
     Ok(())
 }

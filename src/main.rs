@@ -1,6 +1,5 @@
 #[macro_use]
 extern crate clap;
-#[macro_use]
 extern crate log;
 
 use anyhow::anyhow;
@@ -8,10 +7,9 @@ use chrono::Local;
 use clap::{Arg, ArgMatches, Command};
 use clap_complete::Shell;
 use env_logger::Builder;
-use fpm_importer::utils;
 use log::LevelFilter;
+use fpm_importer::utils;
 use std::env;
-use std::ffi::OsStr;
 use std::io::Write;
 use std::path::PathBuf;
 
@@ -114,16 +112,4 @@ fn get_book_dir(args: &ArgMatches) -> PathBuf {
     } else {
         env::current_dir().expect("Unable to determine the current directory")
     }
-}
-
-fn open<P: AsRef<OsStr>>(path: P) {
-    info!("Opening web browser");
-    if let Err(e) = opener::open(path) {
-        error!("Error opening web browser: {}", e);
-    }
-}
-
-#[test]
-fn verify_app() {
-    create_clap_command().debug_assert();
 }

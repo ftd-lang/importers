@@ -20,23 +20,6 @@ pub fn write_file<P: AsRef<Path>>(build_dir: &Path, filename: P, content: &[u8])
     create_file(&path)?.write_all(content).map_err(Into::into)
 }
 
-/// Takes a path and returns a path containing just enough `../` to point to
-/// the root of the given path.
-///
-/// This is mostly interesting for a relative path to point back to the
-/// directory from where the path starts.
-///
-/// ```rust
-/// # use std::path::Path;
-/// # use mdbook::utils::fs::path_to_root;
-/// let path = Path::new("some/relative/path");
-/// assert_eq!(path_to_root(path), "../../");
-/// ```
-///
-/// **note:** it's not very fool-proof, if you find a situation where
-/// it doesn't return the correct path.
-/// Consider [submitting a new issue](https://github.com/rust-lang/mdBook/issues)
-/// or a [pull-request](https://github.com/rust-lang/mdBook/pulls) to improve it.
 pub fn path_to_root<P: Into<PathBuf>>(path: P) -> String {
     debug!("path_to_root");
     // Remove filename and add "../" for every directory
@@ -65,7 +48,7 @@ pub fn create_file(path: &Path) -> Result<File> {
     // Construct path
     if let Some(p) = path.parent() {
         trace!("Parent directory is: {:?}", p);
-        dbg!(&p);
+        //dbg!(&p);
         fs::create_dir_all(p)?;
     }
 

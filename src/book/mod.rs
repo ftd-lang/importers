@@ -1,8 +1,4 @@
-//! The internal representation of a book and infrastructure for loading it from
-//! disk and building it.
-//!
-//! For examples on using `MDBook`, consult the [top-level documentation][1].
-//!
+
 //! [1]: ../index.html
 
 #[allow(clippy::module_inception)]
@@ -51,16 +47,6 @@ impl MDBook {
         let book_root = book_root.into();
         let config_location = book_root.join("config.toml");
 
-        // the book.json file is no longer used, so we should emit a warning to
-        // let people know to migrate to book.toml
-        if book_root.join("book.json").exists() {
-            warn!("It appears you are still using book.json for configuration.");
-            warn!("This format is no longer used, so you should migrate to the");
-            warn!("book.toml format.");
-            warn!("Check the user guide for migration information:");
-            warn!("\thttps://rust-lang.github.io/mdBook/format/config.html");
-        }
-
         let mut config = if config_location.exists() {
             debug!("Loading config from {}", config_location.display());
             Config::from_disk(&config_location)?
@@ -69,20 +55,6 @@ impl MDBook {
         };
 
         config.update_from_env();
-
-        if config
-            .html_config()
-            .map_or(false, |html| html.google_analytics.is_some())
-        {
-            warn!(
-                "The output.html.google-analytics field has been deprecated; \
-                 it will be removed in a future release.\n\
-                 Consider placing the appropriate site tag code into the \
-                 theme/head.hbs file instead.\n\
-                 The tracking code may be found in the Google Analytics Admin page.\n\
-               "
-            );
-        }
 
         if log_enabled!(log::Level::Trace) {
             for line in format!("Config: {:#?}", config).lines() {
@@ -135,59 +107,14 @@ impl MDBook {
         })
     }
 
-    /// Returns a flat depth-first iterator over the elements of the book,
-    /// it returns a [`BookItem`] enum:
-    /// `(section: String, bookitem: &BookItem)`
-    ///
-    /// ```no_run
-    /// # use mdbook::MDBook;
-    /// # use mdbook::book::BookItem;
-    /// # let book = MDBook::load("mybook").unwrap();
-    /// for item in book.iter() {
-    ///     match *item {
-    ///         BookItem::Chapter(ref chapter) => {},
-    ///         BookItem::Separator => {},
-    ///         BookItem::PartTitle(ref title) => {}
-    ///     }
-    /// }
-    ///
-    /// // would print something like this:
-    /// // 1. Chapter 1
-    /// // 1.1 Sub Chapter
-    /// // 1.2 Sub Chapter
-    /// // 2. Chapter 2
-    /// //
-    /// // etc.
     /// ```
     pub fn iter(&self) -> BookItems<'_> {
         self.book.iter()
     }
 
-    /// `init()` gives you a `BookBuilder` which you can use to setup a new book
-    /// and its accompanying directory structure.
-    ///
-    /// The `BookBuilder` creates some boilerplate files and directories to get
-    /// you started with your book.
-    ///
-    /// ```text
-    /// book-test/
-    /// ├── book
-    /// └── src
-    ///     ├── chapter_1.md
-    ///     └── SUMMARY.md
-    /// ```
-    ///
-    /// It uses the path provided as the root directory for your book, then adds
-    /// in a `src/` directory containing a `SUMMARY.md` and `chapter_1.md` file
-    /// to get you started.
-    /*pub fn init<P: Into<PathBuf>>(book_root: P) -> BookBuilder {
-        BookBuilder::new(book_root)
-    }*/
 
     /// Tells the renderer to build our book and put it in the build directory.
     pub fn build(&self) -> Result<()> {
-        info!("Book building has started");
-
         for renderer in &self.renderers {
             self.execute_build_process(&**renderer)?;
         }
@@ -212,8 +139,8 @@ impl MDBook {
                 preprocessed_book = preprocessor.run(&preprocess_ctx, preprocessed_book)?;
             }
         }
-        //dbg!(&preprocessed_book);
         let name = renderer.name();
+        dbg!(&name);
         let build_dir = self.build_dir_for(name);
 
         let mut render_context = RenderContext::new(
@@ -340,29 +267,7 @@ impl MDBook {
         Ok(())
     }
 
-    /// The logic for determining where a backend should put its build
-    /// artefacts.
-    ///
-    /// If there is only 1 renderer, put it in the directory pointed to by the
-    /// `build.build_dir` key in [`Config`]. If there is more than one then the
-    /// renderer gets its own directory within the main build dir.
-    ///
-    /// i.e. If there were only one renderer (in this case, the HTML renderer):
-    ///
-    /// - build/
-    ///   - index.html
-    ///   - ...
-    ///
-    /// Otherwise if there are multiple:
-    ///
-    /// - build/
-    ///   - epub/
-    ///     - my_awesome_book.epub
-    ///   - html/
-    ///     - index.html
-    ///     - ...
-    ///   - latex/
-    ///     - my_awesome_book.tex
+
     ///
     pub fn build_dir_for(&self, backend_name: &str) -> PathBuf {
         let build_dir = self.root.join(&self.config.build.build_dir);
@@ -503,21 +408,13 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>
     for mut names in std::iter::repeat_with(|| preprocessor_names.pop_all())
         .take_while(|names| !names.is_empty())
     {
-        // The `topological_sort` crate does not guarantee a stable order for ties, even across
-        // runs of the same program. Thus, we break ties manually by sorting.
-        // Careful: `str`'s default sorting, which we are implicitly invoking here, uses code point
-        // values ([1]), which may not be an alphabetical sort.
-        // As mentioned in [1], doing so depends on locale, which is not desirable for deciding
-        // preprocessor execution order.
-        // [1]: https://doc.rust-lang.org/stable/std/cmp/trait.Ord.html#impl-Ord-14
         names.sort();
         for name in names {
             let preprocessor: Box<dyn Preprocessor> = match name.as_str() {
                 "links" => Box::new(LinkPreprocessor::new()),
                 "index" => Box::new(IndexPreprocessor::new()),
                 _ => {
-                    // The only way to request a custom preprocessor is through the `preprocessor`
-                    // table, so it must exist, be a table, and contain the key.
+                   
                     let table = &config.get("preprocessor").unwrap().as_table().unwrap()[&name];
                     let command = get_custom_preprocessor_cmd(&name, table);
                     Box::new(CmdPreprocessor::new(name, command))
@@ -527,8 +424,6 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>
         }
     }
 
-    // "If `pop_all` returns an empty vector and `len` is not 0, there are cyclic dependencies."
-    // Normally, `len() == 0` is equivalent to `is_empty()`, so we'll use that.
     if preprocessor_names.is_empty() {
         Ok(preprocessors)
     } else {
@@ -557,12 +452,6 @@ fn interpret_custom_renderer(key: &str, table: &Value) -> Box<CmdRenderer> {
     Box::new(CmdRenderer::new(key.to_string(), command))
 }
 
-/// Check whether we should run a particular `Preprocessor` in combination
-/// with the renderer, falling back to `Preprocessor::supports_renderer()`
-/// method if the user doesn't say anything.
-///
-/// The `build.use-default-preprocessors` config option can be used to ensure
-/// default preprocessors always run if they support the renderer.
 fn preprocessor_should_run(
     preprocessor: &dyn Preprocessor,
     renderer: &dyn Renderer,

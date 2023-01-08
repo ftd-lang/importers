@@ -214,9 +214,7 @@ impl HtmlHandlebars {
         let rendered = fix_code_blocks(&rendered);
         //dbg!("block",&rendered);
         let rendered = add_playground_pre(&rendered, playground_config, edition);
-        dbg!(&rendered);
         let rendered = remove_whitespaces(&rendered);
-        dbg!(&rendered);
         rendered
     }
 
@@ -244,103 +242,7 @@ impl HtmlHandlebars {
             )
             .as_bytes(),
         )?;
-        /*write_file(
-            destination,
-            ".nojekyll",
-            b"This file makes sure that Github Pages doesn't process mdBook's output.\n",
-        )?;
-
-        if let Some(cname) = &html_config.cname {
-            write_file(destination, "CNAME", format!("{}\n", cname).as_bytes())?;
-        }
-
-        write_file(destination, "book.js", &theme.js)?;
-        write_file(destination, "css/general.css", &theme.general_css)?;
-        write_file(destination, "css/chrome.css", &theme.chrome_css)?;
-        if html_config.print.enable {
-            write_file(destination, "css/print.css", &theme.print_css)?;
-        }
-        write_file(destination, "css/variables.css", &theme.variables_css)?;
-        if let Some(contents) = &theme.favicon_png {
-            write_file(destination, "favicon.png", contents)?;
-        }
-        if let Some(contents) = &theme.favicon_svg {
-            write_file(destination, "favicon.svg", contents)?;
-        }
-        write_file(destination, "highlight.css", &theme.highlight_css)?;
-        write_file(destination, "tomorrow-night.css", &theme.tomorrow_night_css)?;
-        write_file(destination, "ayu-highlight.css", &theme.ayu_highlight_css)?;
-        write_file(destination, "highlight.js", &theme.highlight_js)?;
-        write_file(destination, "clipboard.min.js", &theme.clipboard_js)?;
-        write_file(
-            destination,
-            "FontAwesome/css/font-awesome.css",
-            theme::FONT_AWESOME,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/fontawesome-webfont.eot",
-            theme::FONT_AWESOME_EOT,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/fontawesome-webfont.svg",
-            theme::FONT_AWESOME_SVG,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/fontawesome-webfont.ttf",
-            theme::FONT_AWESOME_TTF,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/fontawesome-webfont.woff",
-            theme::FONT_AWESOME_WOFF,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/fontawesome-webfont.woff2",
-            theme::FONT_AWESOME_WOFF2,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/FontAwesome.ttf",
-            theme::FONT_AWESOME_TTF,
-        )?;
-        if html_config.copy_fonts {
-            write_file(destination, "fonts/fonts.css", theme::fonts::CSS)?;
-            for (file_name, contents) in theme::fonts::LICENSES.iter() {
-                write_file(destination, file_name, contents)?;
-            }
-            for (file_name, contents) in theme::fonts::OPEN_SANS.iter() {
-                write_file(destination, file_name, contents)?;
-            }
-            write_file(
-                destination,
-                theme::fonts::SOURCE_CODE_PRO.0,
-                theme::fonts::SOURCE_CODE_PRO.1,
-            )?;
-        }
-
-        let playground_config = &html_config.playground;
-
-        // Ace is a very large dependency, so only load it when requested
-        if playground_config.editable && playground_config.copy_js {
-            // Load the editor
-            write_file(destination, "editor.js", playground_editor::JS)?;
-            write_file(destination, "ace.js", playground_editor::ACE_JS)?;
-            write_file(destination, "mode-rust.js", playground_editor::MODE_RUST_JS)?;
-            write_file(
-                destination,
-                "theme-dawn.js",
-                playground_editor::THEME_DAWN_JS,
-            )?;
-            write_file(
-                destination,
-                "theme-tomorrow_night.js",
-                playground_editor::THEME_TOMORROW_NIGHT_JS,
-            )?;
-        }*/
+        
 
         Ok(())
     }
@@ -376,42 +278,6 @@ impl HtmlHandlebars {
         handlebars.register_helper("theme_option", Box::new(helpers::theme::theme_option));
     }
 
-    /// Copy across any additional CSS and JavaScript files which the book
-    /// has been configured to use.
-    /*fn copy_additional_css_and_js(
-        &self,
-        html: &HtmlConfig,
-        root: &Path,
-        destination: &Path,
-    ) -> Result<()> {
-        let custom_files = html.additional_css.iter().chain(html.additional_js.iter());
-
-        debug!("Copying additional CSS and JS");
-
-        for custom_file in custom_files {
-            let input_location = root.join(custom_file);
-            let output_location = destination.join(custom_file);
-            if let Some(parent) = output_location.parent() {
-                fs::create_dir_all(parent)
-                    .with_context(|| format!("Unable to create {}", parent.display()))?;
-            }
-            debug!(
-                "Copying {} -> {}",
-                input_location.display(),
-                output_location.display()
-            );
-
-            fs::copy(&input_location, &output_location).with_context(|| {
-                format!(
-                    "Unable to copy {} to {}",
-                    input_location.display(),
-                    output_location.display()
-                )
-            })?;
-        }
-
-        Ok(())
-    }*/
 
     fn emit_redirects(
         &self,
@@ -594,25 +460,10 @@ impl Renderer for HtmlHandlebars {
             data.insert("title".to_owned(), json!(title));
         }
 
-        // Render the handlebars template with the data
-        //commented for ftd
-        /*if html_config.print.enable {
-            debug!("Render template");
-            let rendered = handlebars.render("index", &data)?;
-
-            let rendered =
-                self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
-
-            utils::fs::write_file(destination, "print.html", rendered.as_bytes())?;
-            debug!("Creating print.html ✓");
-        }*/
-
         debug!("Copy static files");
         self.copy_static_files(destination)
             .with_context(|| "Unable to copy across static files")?;
-        /*self.copy_additional_css_and_js(&html_config, &ctx.root, destination)
-                    .with_context(|| "Unable to copy across additional CSS and JS")?;
-        */
+
         // Render search index
         #[cfg(feature = "search")]
         {
@@ -654,111 +505,12 @@ fn make_data(
         "description".to_owned(),
         json!(config.book.description.clone().unwrap_or_default()),
     );
-    /*if theme.favicon_png.is_some() {
-        data.insert("favicon_png".to_owned(), json!("favicon.png"));
-    }
-    if theme.favicon_svg.is_some() {
-        data.insert("favicon_svg".to_owned(), json!("favicon.svg"));
-    }
-    if let Some(ref live_reload_endpoint) = html_config.live_reload_endpoint {
-        data.insert(
-            "live_reload_endpoint".to_owned(),
-            json!(live_reload_endpoint),
-        );
-    }*/
-
-    // TODO: remove default_theme in 0.5, it is not needed.
-    /*let default_theme = match html_config.default_theme {
-        Some(ref theme) => theme.to_lowercase(),
-        None => "light".to_string(),
-    };
-    data.insert("default_theme".to_owned(), json!(default_theme));
-
-    let preferred_dark_theme = match html_config.preferred_dark_theme {
-        Some(ref theme) => theme.to_lowercase(),
-        None => "navy".to_string(),
-    };
-    data.insert(
-        "preferred_dark_theme".to_owned(),
-        json!(preferred_dark_theme),
-    );
-
-    // Add google analytics tag
-    if let Some(ref ga) = html_config.google_analytics {
-        data.insert("google_analytics".to_owned(), json!(ga));
-    }
-
-    if html_config.mathjax_support {
-        data.insert("mathjax_support".to_owned(), json!(true));
-    }
-
-    if html_config.copy_fonts {
-        data.insert("copy_fonts".to_owned(), json!(true));
-    }*/
-
-    // Add check to see if there is an additional style
-    /*if !html_config.additional_css.is_empty() {
-        let mut css = Vec::new();
-        for style in &html_config.additional_css {
-            match style.strip_prefix(root) {
-                Ok(p) => css.push(p.to_str().expect("Could not convert to str")),
-                Err(_) => css.push(style.to_str().expect("Could not convert to str")),
-            }
-        }
-        data.insert("additional_css".to_owned(), json!(css));
-    }*/
-
-    // Add check to see if there is an additional script
-    /*if !html_config.additional_js.is_empty() {
-        let mut js = Vec::new();
-        for script in &html_config.additional_js {
-            match script.strip_prefix(root) {
-                Ok(p) => js.push(p.to_str().expect("Could not convert to str")),
-                Err(_) => js.push(script.to_str().expect("Could not convert to str")),
-            }
-        }
-        data.insert("additional_js".to_owned(), json!(js));
-    }
-
-    if html_config.playground.editable && html_config.playground.copy_js {
-        data.insert("playground_js".to_owned(), json!(true));
-        if html_config.playground.line_numbers {
-            data.insert("playground_line_numbers".to_owned(), json!(true));
-        }
-    }
-    if html_config.playground.copyable {
-        data.insert("playground_copyable".to_owned(), json!(true));
-    }*/
+   
 
     data.insert("print_enable".to_owned(), json!(html_config.print.enable));
     data.insert("fold_enable".to_owned(), json!(html_config.fold.enable));
     data.insert("fold_level".to_owned(), json!(html_config.fold.level));
 
-    /*let search = html_config.search.clone();
-    if cfg!(feature = "search") {
-        let search = search.unwrap_or_default();
-        data.insert("search_enabled".to_owned(), json!(search.enable));
-        data.insert(
-            "search_js".to_owned(),
-            json!(search.enable && search.copy_js),
-        );
-    } else if search.is_some() {
-        warn!("mdBook compiled without search support, ignoring `output.html.search` table");
-        warn!(
-            "please reinstall with `cargo install mdbook --force --features search`to use the \
-             search feature"
-        )
-    }
-
-    if let Some(ref git_repository_url) = html_config.git_repository_url {
-        data.insert("git_repository_url".to_owned(), json!(git_repository_url));
-    }
-
-    let git_repository_icon = match html_config.git_repository_icon {
-        Some(ref git_repository_icon) => git_repository_icon,
-        None => "fa-github",
-    };
-    data.insert("git_repository_icon".to_owned(), json!(git_repository_icon));*/
 
     let mut chapters = vec![];
 
@@ -867,12 +619,7 @@ fn insert_markdown_into_paragraph(content: &str) -> String {
         text = content
     )
 }
-// The rust book uses annotations for rustdoc to test code snippets,
-// like the following:
-// ```rust,should_panic
-// fn main() {
-//     // Code here
-// }
+
 // ```
 // This function replaces all commas by spaces in the code block classes
 fn fix_code_blocks(html: &str) -> String {

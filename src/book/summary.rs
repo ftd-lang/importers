@@ -8,46 +8,6 @@ use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 
-/// Parse the text from a `SUMMARY.md` file into a sort of "recipe" to be
-/// used when loading a book from disk.
-///
-/// # Summary Format
-///
-/// **Title:** It's common practice to begin with a title, generally
-/// "# Summary". It's not mandatory and the parser (currently) ignores it, so
-/// you can too if you feel like it.
-///
-/// **Prefix Chapter:** Before the main numbered chapters you can add a couple
-/// of elements that will not be numbered. This is useful for forewords,
-/// introductions, etc. There are however some constraints. You can not nest
-/// prefix chapters, they should all be on the root level. And you can not add
-/// prefix chapters once you have added numbered chapters.
-///
-/// ```markdown
-/// [Title of prefix element](relative/path/to/markdown.md)
-/// ```
-///
-/// **Part Title:** An optional title for the next collect of numbered chapters. The numbered
-/// chapters can be broken into as many parts as desired.
-///
-/// **Numbered Chapter:** Numbered chapters are the main content of the book,
-/// they
-/// will be numbered and can be nested, resulting in a nice hierarchy (chapters,
-/// sub-chapters, etc.)
-///
-/// ```markdown
-/// # Title of Part
-///
-/// - [Title of the Chapter](relative/path/to/markdown.md)
-/// ```
-///
-/// You can either use - or * to indicate a numbered chapter, the parser doesn't
-/// care but you'll probably want to stay consistent.
-///
-/// **Suffix Chapter:** After the numbered chapters you can add a couple of
-/// non-numbered chapters. They are the same as prefix chapters but come after
-/// the numbered chapters instead of before.
-///
 /// All other elements are unsupported and will be ignored at best or result in
 /// an error.
 pub fn parse_summary(summary: &str) -> Result<Summary> {
@@ -134,50 +94,14 @@ impl From<Link> for SummaryItem {
     }
 }
 
-/// A recursive descent (-ish) parser for a `SUMMARY.md`.
-///
-///
-/// # Grammar
-///
-/// The `SUMMARY.md` file has a grammar which looks something like this:
-///
-/// ```text
-/// summary           ::= title prefix_chapters numbered_chapters
-///                         suffix_chapters
-/// title             ::= "# " TEXT
-///                     | EPSILON
-/// prefix_chapters   ::= item*
-/// suffix_chapters   ::= item*
-/// numbered_chapters ::= part+
-/// part              ::= title dotted_item+
-/// dotted_item       ::= INDENT* DOT_POINT item
-/// item              ::= link
-///                     | separator
-/// separator         ::= "---"
-/// link              ::= "[" TEXT "]" "(" TEXT ")"
-/// DOT_POINT         ::= "-"
-///                     | "*"
-/// ```
-///
-/// > **Note:** the `TEXT` terminal is "normal" text, and should (roughly)
-/// > match the following regex: "[^<>\n[]]+".
 struct SummaryParser<'a> {
     src: &'a str,
     stream: pulldown_cmark::OffsetIter<'a, 'a>,
     offset: usize,
 
-    /// We can't actually put an event back into the `OffsetIter` stream, so instead we store it
-    /// here until somebody calls `next_event` again.
     back: Option<Event<'a>>,
 }
 
-/// Reads `Events` from the provided stream until the corresponding
-/// `Event::End` is encountered which matches the `$delimiter` pattern.
-///
-/// This is the equivalent of doing
-/// `$stream.take_while(|e| e != $delimiter).collect()` but it allows you to
-/// use pattern matching and you won't get errors because `take_while()`
-/// moves `$stream` out of self.
 macro_rules! collect_events {
     ($stream:expr,start $delimiter:pat) => {
         collect_events!($stream, Event::Start($delimiter))

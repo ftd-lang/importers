@@ -7,40 +7,15 @@ use std::path::Path;
 use crate::errors::*;
 use log::warn;
 pub static INDEX: &[u8] = include_bytes!("index.hbs");
-pub static HEAD: &[u8] = include_bytes!("head.hbs");
-pub static REDIRECT: &[u8] = include_bytes!("redirect.hbs");
-pub static HEADER: &[u8] = include_bytes!("header.hbs");
-
-pub static FAVICON_PNG: &[u8] = include_bytes!("favicon.png");
-pub static FAVICON_SVG: &[u8] = include_bytes!("favicon.svg");
-pub static JS: &[u8] = include_bytes!("book.js");
-pub static HIGHLIGHT_JS: &[u8] = include_bytes!("highlight.js");
-pub static TOMORROW_NIGHT_CSS: &[u8] = include_bytes!("tomorrow-night.css");
-pub static HIGHLIGHT_CSS: &[u8] = include_bytes!("highlight.css");
-pub static AYU_HIGHLIGHT_CSS: &[u8] = include_bytes!("ayu-highlight.css");
-pub static CLIPBOARD_JS: &[u8] = include_bytes!("clipboard.min.js");
 
 
-/// The `Theme` struct should be used instead of the static variables because
-/// the `new()` method will look if the user has a theme directory in their
-/// source folder and use the users theme instead of the default.
-///
+
 /// You should only ever use the static variables directly if you want to
 /// override the user's theme with the defaults.
 #[derive(Debug, Eq, PartialEq)]
 pub struct Theme {
     pub index: Vec<u8>,
-    pub head: Vec<u8>,
-    pub redirect: Vec<u8>,
-    pub header: Vec<u8>,
-    pub favicon_png: Option<Vec<u8>>,
-    pub favicon_svg: Option<Vec<u8>>,
-    pub js: Vec<u8>,
-    pub highlight_css: Vec<u8>,
-    pub tomorrow_night_css: Vec<u8>,
-    pub ayu_highlight_css: Vec<u8>,
-    pub highlight_js: Vec<u8>,
-    pub clipboard_js: Vec<u8>,
+   
 }
 
 impl Theme {
@@ -59,21 +34,6 @@ impl Theme {
         {
             let files = vec![
                 (theme_dir.join("index.hbs"), &mut theme.index),
-                (theme_dir.join("head.hbs"), &mut theme.head),
-                (theme_dir.join("redirect.hbs"), &mut theme.redirect),
-                (theme_dir.join("header.hbs"), &mut theme.header),
-                (theme_dir.join("book.js"), &mut theme.js),
-                (theme_dir.join("highlight.js"), &mut theme.highlight_js),
-                (theme_dir.join("clipboard.min.js"), &mut theme.clipboard_js),
-                (theme_dir.join("highlight.css"), &mut theme.highlight_css),
-                (
-                    theme_dir.join("tomorrow-night.css"),
-                    &mut theme.tomorrow_night_css,
-                ),
-                (
-                    theme_dir.join("ayu-highlight.css"),
-                    &mut theme.ayu_highlight_css,
-                ),
             ];
 
             let load_with_warn = |filename: &Path, dest| {
@@ -93,21 +53,6 @@ impl Theme {
                 load_with_warn(&filename, dest);
             }
 
-            // If the user overrides one favicon, but not the other, do not
-            // copy the default for the other.
-            let favicon_png = &mut theme.favicon_png.as_mut().unwrap();
-            let png = load_with_warn(&theme_dir.join("favicon.png"), favicon_png);
-            let favicon_svg = &mut theme.favicon_svg.as_mut().unwrap();
-            let svg = load_with_warn(&theme_dir.join("favicon.svg"), favicon_svg);
-            match (png, svg) {
-                (true, true) | (false, false) => {}
-                (true, false) => {
-                    theme.favicon_svg = None;
-                }
-                (false, true) => {
-                    theme.favicon_png = None;
-                }
-            }
         }
 
         theme
@@ -118,17 +63,6 @@ impl Default for Theme {
     fn default() -> Theme {
         Theme {
             index: INDEX.to_owned(),
-            head: HEAD.to_owned(),
-            redirect: REDIRECT.to_owned(),
-            header: HEADER.to_owned(),
-            favicon_png: Some(FAVICON_PNG.to_owned()),
-            favicon_svg: Some(FAVICON_SVG.to_owned()),
-            js: JS.to_owned(),
-            highlight_css: HIGHLIGHT_CSS.to_owned(),
-            tomorrow_night_css: TOMORROW_NIGHT_CSS.to_owned(),
-            ayu_highlight_css: AYU_HIGHLIGHT_CSS.to_owned(),
-            highlight_js: HIGHLIGHT_JS.to_owned(),
-            clipboard_js: CLIPBOARD_JS.to_owned(),
         }
     }
 }

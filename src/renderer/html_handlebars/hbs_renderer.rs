@@ -409,15 +409,6 @@ impl Renderer for HtmlHandlebars {
         debug!("Register the index handlebars template");
         handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
 
-        debug!("Register the head handlebars template");
-        handlebars.register_partial("head", String::from_utf8(theme.head.clone())?)?;
-
-        debug!("Register the redirect handlebars template");
-        handlebars
-            .register_template_string("redirect", String::from_utf8(theme.redirect.clone())?)?;
-
-        debug!("Register the header handlebars template");
-        handlebars.register_partial("header", String::from_utf8(theme.header.clone())?)?;
 
         debug!("Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars, &html_config);

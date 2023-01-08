@@ -3,7 +3,6 @@ mod book;
 mod summary;
 
 pub use self::book::{load_book, Book, BookItem, BookItems, Chapter};
-//pub use self::init::BookBuilder;
 pub use self::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 
 use log::{debug, info, log_enabled, trace, warn};

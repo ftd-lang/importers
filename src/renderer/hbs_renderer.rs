@@ -1,7 +1,7 @@
 use crate::book::{Book, BookItem};
 use crate::config::{BookConfig, Config, HtmlConfig, Playground, RustEdition};
 use crate::errors::*;
-use crate::renderer::html_handlebars::helpers;
+//use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
 use crate::theme::{self, Theme};
 use crate::utils;
@@ -115,8 +115,9 @@ impl HtmlHandlebars {
         // Write to file
 
         //dbg!("Creating {}", filepath.display());
+        dbg!(&ctx.destination);
         utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
-
+       
         if ctx.is_index {
             ctx.data.insert("path".to_owned(), json!("index.md"));
             ctx.data.insert("path_to_root".to_owned(), json!(""));
@@ -132,6 +133,7 @@ impl HtmlHandlebars {
             );
 
             debug!("Creating index.html from {}", ctx_path);
+            dbg!(&ctx.destination);
             utils::fs::write_file(&ctx.destination, "index.ftd", rendered_index.as_bytes())?;
         }
 
@@ -265,18 +267,7 @@ impl HtmlHandlebars {
         );
     }
 
-    fn register_hbs_helpers(&self, handlebars: &mut Handlebars<'_>, html_config: &HtmlConfig) {
-        handlebars.register_helper(
-            "toc",
-            Box::new(helpers::toc::RenderToc {
-                no_section_label: html_config.no_section_label,
-            }),
-        );
-        handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
-        handlebars.register_helper("next", Box::new(helpers::navigation::next));
-        // TODO: remove theme_option in 0.5, it is not needed.
-        handlebars.register_helper("theme_option", Box::new(helpers::theme::theme_option));
-    }
+    
 
 
     fn emit_redirects(
@@ -410,8 +401,7 @@ impl Renderer for HtmlHandlebars {
         handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
 
 
-        debug!("Register handlebars helpers");
-        self.register_hbs_helpers(&mut handlebars, &html_config);
+        
         //dbg!("html_config",&html_config);
         //dbg!("handle-bars",&handlebars);
         //dbg!("Mdbook",&book);

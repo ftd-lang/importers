@@ -1,10 +1,11 @@
 
 //! [RenderContext]: struct.RenderContext.html
 
-pub use self::html_handlebars::HtmlHandlebars;
+pub use self::hbs_renderer::HtmlHandlebars;
 pub use self::markdown_renderer::MarkdownRenderer;
 
-mod html_handlebars;
+//mod html_handlebars;
+mod hbs_renderer;
 mod markdown_renderer;
 
 use shlex::Shlex;

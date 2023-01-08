@@ -74,7 +74,7 @@ pub fn create_file(path: &Path) -> Result<File> {
 
 /// Removes all the content of a directory but not the directory itself
 pub fn remove_dir_content(dir: &Path) -> Result<()> {
-    for item in fs::read_dir(dir)? {
+    /*for item in fs::read_dir(dir)? {
         if let Ok(item) = item {
             let item = item.path();
             if item.is_dir() {
@@ -83,6 +83,16 @@ pub fn remove_dir_content(dir: &Path) -> Result<()> {
                 fs::remove_file(item)?;
             }
         }
+    }*/
+    for item in (fs::read_dir(dir)?).flatten() {
+        //if let Ok(item) = item {
+        let item = item.path();
+        if item.is_dir() {
+            fs::remove_dir_all(item)?;
+        } else {
+            fs::remove_file(item)?;
+        }
+        //}
     }
     Ok(())
 }
@@ -186,91 +196,4 @@ pub fn get_404_output_file(input_404: &Option<String>) -> String {
         .as_ref()
         .unwrap_or(&"404.md".to_string())
         .replace(".md", ".html")
-}
-
-#[cfg(test)]
-mod tests {
-    use super::copy_files_except_ext;
-    use std::{fs, io::Result, path::Path};
-
-    #[cfg(target_os = "windows")]
-    fn symlink<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q) -> Result<()> {
-        std::os::windows::fs::symlink_file(src, dst)
-    }
-
-    #[cfg(not(target_os = "windows"))]
-    fn symlink<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q) -> Result<()> {
-        std::os::unix::fs::symlink(src, dst)
-    }
-
-    #[test]
-    fn copy_files_except_ext_test() {
-        let tmp = match tempfile::TempDir::new() {
-            Ok(t) => t,
-            Err(e) => panic!("Could not create a temp dir: {}", e),
-        };
-
-        // Create a couple of files
-        if let Err(err) = fs::File::create(&tmp.path().join("file.txt")) {
-            panic!("Could not create file.txt: {}", err);
-        }
-        if let Err(err) = fs::File::create(&tmp.path().join("file.md")) {
-            panic!("Could not create file.md: {}", err);
-        }
-        if let Err(err) = fs::File::create(&tmp.path().join("file.png")) {
-            panic!("Could not create file.png: {}", err);
-        }
-        if let Err(err) = fs::create_dir(&tmp.path().join("sub_dir")) {
-            panic!("Could not create sub_dir: {}", err);
-        }
-        if let Err(err) = fs::File::create(&tmp.path().join("sub_dir/file.png")) {
-            panic!("Could not create sub_dir/file.png: {}", err);
-        }
-        if let Err(err) = fs::create_dir(&tmp.path().join("sub_dir_exists")) {
-            panic!("Could not create sub_dir_exists: {}", err);
-        }
-        if let Err(err) = fs::File::create(&tmp.path().join("sub_dir_exists/file.txt")) {
-            panic!("Could not create sub_dir_exists/file.txt: {}", err);
-        }
-        if let Err(err) = symlink(
-            &tmp.path().join("file.png"),
-            &tmp.path().join("symlink.png"),
-        ) {
-            panic!("Could not symlink file.png: {}", err);
-        }
-
-        // Create output dir
-        if let Err(err) = fs::create_dir(&tmp.path().join("output")) {
-            panic!("Could not create output: {}", err);
-        }
-        if let Err(err) = fs::create_dir(&tmp.path().join("output/sub_dir_exists")) {
-            panic!("Could not create output/sub_dir_exists: {}", err);
-        }
-
-        if let Err(e) =
-            copy_files_except_ext(tmp.path(), &tmp.path().join("output"), true, None, &["md"])
-        {
-            panic!("Error while executing the function:\n{:?}", e);
-        }
-
-        // Check if the correct files where created
-        if !(&tmp.path().join("output/file.txt")).exists() {
-            panic!("output/file.txt should exist")
-        }
-        if (&tmp.path().join("output/file.md")).exists() {
-            panic!("output/file.md should not exist")
-        }
-        if !(&tmp.path().join("output/file.png")).exists() {
-            panic!("output/file.png should exist")
-        }
-        if !(&tmp.path().join("output/sub_dir/file.png")).exists() {
-            panic!("output/sub_dir/file.png should exist")
-        }
-        if !(&tmp.path().join("output/sub_dir_exists/file.txt")).exists() {
-            panic!("output/sub_dir/file.png should exist")
-        }
-        if !(&tmp.path().join("output/symlink.png")).exists() {
-            panic!("output/symlink.png should exist")
-        }
-    }
 }

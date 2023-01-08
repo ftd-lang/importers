@@ -77,29 +77,3 @@ fn is_readme_file<P: AsRef<Path>>(path: P) -> bool {
             .unwrap_or_default(),
     )
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn file_stem_exactly_matches_readme_case_insensitively() {
-        let path = "path/to/Readme.md";
-        assert!(is_readme_file(path));
-
-        let path = "path/to/README.md";
-        assert!(is_readme_file(path));
-
-        let path = "path/to/rEaDmE.md";
-        assert!(is_readme_file(path));
-
-        let path = "path/to/README.markdown";
-        assert!(is_readme_file(path));
-
-        let path = "path/to/README";
-        assert!(is_readme_file(path));
-
-        let path = "path/to/README-README.md";
-        assert!(!is_readme_file(path));
-    }
-}

@@ -28,7 +28,6 @@
 //! md.build().expect("Building failed");
 //! ```
 
-
 #![deny(missing_docs)]
 #![deny(rust_2018_idioms)]
 

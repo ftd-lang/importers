@@ -1,12 +1,10 @@
 [book]
 title = "FTD"
-description = "MDbook created for FTD"
+description = "Markdown importer for FTD"
 authors = ["Wasif Shah"]
 language = "en"
 
 [rust]
 edition = "2018"
 
-[output.html]
-site-url = "/ftd/"
 

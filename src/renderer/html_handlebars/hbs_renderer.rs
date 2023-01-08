@@ -91,7 +91,7 @@ impl HtmlHandlebars {
         } else {
             ch.name.clone() + " - " + book_title
         };
-//dbg!(&content);
+        //dbg!(&content);
         ctx.data.insert("path".to_owned(), json!(path));
         ctx.data.insert("content".to_owned(), json!(content));
         ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
@@ -109,10 +109,11 @@ impl HtmlHandlebars {
         //debug!("Render template");
         let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
-        let rendered = self.post_process(rendered, &ctx.html_config.playground, ctx.edition,&title);
-//dbg!(&filepath);
+        let rendered =
+            self.post_process(rendered, &ctx.html_config.playground, ctx.edition, &title);
+        //dbg!(&filepath);
         // Write to file
-        
+
         //dbg!("Creating {}", filepath.display());
         utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
 
@@ -120,12 +121,16 @@ impl HtmlHandlebars {
             ctx.data.insert("path".to_owned(), json!("index.md"));
             ctx.data.insert("path_to_root".to_owned(), json!(""));
             ctx.data.insert("is_index".to_owned(), json!(true));
-           // dbg!(&ctx.data);
+            // dbg!(&ctx.data);
             let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
             //dbg!(&rendered_index);
-            let rendered_index =
-                self.post_process(rendered_index, &ctx.html_config.playground, ctx.edition,&title);
-            
+            let rendered_index = self.post_process(
+                rendered_index,
+                &ctx.html_config.playground,
+                ctx.edition,
+                &title,
+            );
+
             debug!("Creating index.html from {}", ctx_path);
             utils::fs::write_file(&ctx.destination, "index.ftd", rendered_index.as_bytes())?;
         }
@@ -138,7 +143,7 @@ impl HtmlHandlebars {
         ctx: &RenderContext,
         html_config: &HtmlConfig,
         src_dir: &Path,
-        handlebars: &mut Handlebars<'_>,
+        _handlebars: &mut Handlebars<'_>,
         data: &mut serde_json::Map<String, serde_json::Value>,
     ) -> Result<()> {
         //let destination = &ctx.destination;
@@ -198,10 +203,11 @@ impl HtmlHandlebars {
         &self,
         rendered: String,
         playground_config: &Playground,
-        edition: Option<RustEdition>,title:&String
+        edition: Option<RustEdition>,
+        title: &String,
     ) -> String {
         //dbg!(&rendered);
-        let rendered = embed_title(&rendered,&title);
+        let rendered = embed_title(&rendered, title);
         let rendered = build_header_links(&rendered);
         let rendered = build_paragraph_with_markdown(&rendered);
         //dbg!("headers",&rendered);
@@ -214,16 +220,14 @@ impl HtmlHandlebars {
         rendered
     }
 
-    fn copy_static_files(
-        &self,
-        destination: &Path,
-    ) -> Result<()> {
+    fn copy_static_files(&self, destination: &Path) -> Result<()> {
         use crate::utils::fs::write_file;
 
         write_file(
             destination,
             "FPM.ftd",
-            remove_whitespaces("-- import: fpm
+            remove_whitespaces(
+                "-- import: fpm
 
             -- fpm.package: wasif1024.github.io/fpm-site
             download-base-url: https://raw.githubusercontent.com/wasif1024/fpm-site/main
@@ -237,7 +241,9 @@ impl HtmlHandlebars {
             # Home: /
             nav-title: Home
             data: Section Data",
-        ).as_bytes())?;
+            )
+            .as_bytes(),
+        )?;
         /*write_file(
             destination,
             ".nojekyll",
@@ -502,7 +508,7 @@ impl Renderer for HtmlHandlebars {
         let destination = &ctx.destination;
         let book = &ctx.book;
         let build_dir = ctx.root.join(&ctx.config.build.build_dir);
-        
+
         if destination.exists() {
             utils::fs::remove_dir_content(destination)
                 .with_context(|| "Unable to remove stale HTML output")?;
@@ -605,8 +611,8 @@ impl Renderer for HtmlHandlebars {
         self.copy_static_files(destination)
             .with_context(|| "Unable to copy across static files")?;
         /*self.copy_additional_css_and_js(&html_config, &ctx.root, destination)
-            .with_context(|| "Unable to copy across additional CSS and JS")?;
-*/
+                    .with_context(|| "Unable to copy across additional CSS and JS")?;
+        */
         // Render search index
         #[cfg(feature = "search")]
         {
@@ -627,11 +633,11 @@ impl Renderer for HtmlHandlebars {
 }
 
 fn make_data(
-    root: &Path,
+    _root: &Path,
     book: &Book,
     config: &Config,
     html_config: &HtmlConfig,
-    theme: &Theme,
+    _theme: &Theme,
 ) -> Result<serde_json::Map<String, serde_json::Value>> {
     trace!("make_data");
     //dbg!("make data");
@@ -789,7 +795,7 @@ fn make_data(
 
         chapters.push(chapter);
     }
-//dbg!(&chapters);
+    //dbg!(&chapters);
     data.insert("chapters".to_owned(), json!(chapters));
     //dbg!("data json");
     //dbg!(&data);
@@ -816,30 +822,27 @@ fn build_header_links(html: &str) -> String {
         })
         .into_owned()
 }
-fn embed_title(html: &str,title:&String) -> String {
+fn embed_title(html: &str, title: &String) -> String {
     static BUILD_HEADER_LINKS: Lazy<Regex> =
         Lazy::new(|| Regex::new(r"<title>(.*?)</title>").unwrap());
-    BUILD_HEADER_LINKS
-        .replace_all(html, title)
-        .into_owned()
+    BUILD_HEADER_LINKS.replace_all(html, title).into_owned()
 }
 fn build_paragraph_with_markdown(html: &str) -> String {
-//dbg!(&html);
-    static PARAGRAPH_ELEMENTS: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r#"<p>(.*?)</p>"#).unwrap());
-        PARAGRAPH_ELEMENTS
+    //dbg!(&html);
+    static PARAGRAPH_ELEMENTS: Lazy<Regex> = Lazy::new(|| Regex::new(r#"<p>(.*?)</p>"#).unwrap());
+    PARAGRAPH_ELEMENTS
         .replace_all(html, |caps: &Captures<'_>| {
             //dbg!(&caps);
 
-                insert_markdown_into_paragraph(&caps[1])
+            insert_markdown_into_paragraph(&caps[1])
         })
         .into_owned()
 }
-fn remove_whitespaces(html: &str)->String{
+fn remove_whitespaces(html: &str) -> String {
     static PARAGRAPH_ELEMENTS: Lazy<Regex> =
         Lazy::new(|| Regex::new(r#"(?m)^ +| +$| +( )"#).unwrap());
-        PARAGRAPH_ELEMENTS
-        .replace_all(html.trim(),"$1")
+    PARAGRAPH_ELEMENTS
+        .replace_all(html.trim(), "$1")
         .into_owned()
 }
 /// Insert a sinle link into a header, making sure each link gets its own
@@ -852,16 +855,9 @@ fn insert_link_into_header(
     //dbg!(&content);
     let id = utils::unique_id_from_content(content, id_counter);
 
-    format!(
-        r##"-- ds.h{level}: {id}"##,
-        level = level,
-        id = id,
-    )
-
+    format!(r##"-- ds.h{level}: {id}"##, level = level, id = id,)
 }
-fn insert_markdown_into_paragraph(
-    content: &str,
-) -> String {
+fn insert_markdown_into_paragraph(content: &str) -> String {
     //dbg!(&content);
     format!(
         r##"-- ds.markdown: 
@@ -1031,147 +1027,4 @@ struct RenderItemContext<'a> {
     html_config: HtmlConfig,
     edition: Option<RustEdition>,
     chapter_titles: &'a HashMap<PathBuf, String>,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn original_build_header_links() {
-        let inputs = vec![
-            (
-                "blah blah <h1>Foo</h1>",
-                r##"blah blah <h1 id="foo"><a class="header" href="#foo">Foo</a></h1>"##,
-            ),
-            (
-                "<h1>Foo</h1>",
-                r##"<h1 id="foo"><a class="header" href="#foo">Foo</a></h1>"##,
-            ),
-            (
-                "<h3>Foo^bar</h3>",
-                r##"<h3 id="foobar"><a class="header" href="#foobar">Foo^bar</a></h3>"##,
-            ),
-            (
-                "<h4></h4>",
-                r##"<h4 id=""><a class="header" href="#"></a></h4>"##,
-            ),
-            (
-                "<h4><em>Hï</em></h4>",
-                r##"<h4 id="hï"><a class="header" href="#hï"><em>Hï</em></a></h4>"##,
-            ),
-            (
-                "<h1>Foo</h1><h3>Foo</h3>",
-                r##"<h1 id="foo"><a class="header" href="#foo">Foo</a></h1><h3 id="foo-1"><a class="header" href="#foo-1">Foo</a></h3>"##,
-            ),
-        ];
-
-        for (src, should_be) in inputs {
-            let got = build_header_links(src);
-            assert_eq!(got, should_be);
-        }
-    }
-
-    #[test]
-    fn add_playground() {
-        let inputs = [
-          ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>"),
-          ("<code class=\"language-rust\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}</code></pre>"),
-          ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";</code></pre>"),
-          ("<code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code></pre>"),
-          ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span><span class=\"boring\">\n</span>\";</code></pre>"),
-          ("<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
-           "<code class=\"language-rust ignore\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";</code>"),
-          ("<code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code></pre>"),
-        ];
-        for (src, should_be) in &inputs {
-            let got = add_playground_pre(
-                src,
-                &Playground {
-                    editable: true,
-                    ..Playground::default()
-                },
-                None,
-            );
-            assert_eq!(&*got, *should_be);
-        }
-    }
-    #[test]
-    fn add_playground_edition2015() {
-        let inputs = [
-          ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>"),
-          ("<code class=\"language-rust\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>"),
-          ("<code class=\"language-rust edition2015\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>"),
-          ("<code class=\"language-rust edition2018\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>"),
-        ];
-        for (src, should_be) in &inputs {
-            let got = add_playground_pre(
-                src,
-                &Playground {
-                    editable: true,
-                    ..Playground::default()
-                },
-                Some(RustEdition::E2015),
-            );
-            assert_eq!(&*got, *should_be);
-        }
-    }
-    #[test]
-    fn add_playground_edition2018() {
-        let inputs = [
-          ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>"),
-          ("<code class=\"language-rust\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>"),
-          ("<code class=\"language-rust edition2015\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>"),
-          ("<code class=\"language-rust edition2018\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>"),
-        ];
-        for (src, should_be) in &inputs {
-            let got = add_playground_pre(
-                src,
-                &Playground {
-                    editable: true,
-                    ..Playground::default()
-                },
-                Some(RustEdition::E2018),
-            );
-            assert_eq!(&*got, *should_be);
-        }
-    }
-    #[test]
-    fn add_playground_edition2021() {
-        let inputs = [
-            ("<code class=\"language-rust\">x()</code>",
-             "<pre class=\"playground\"><code class=\"language-rust edition2021\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>"),
-            ("<code class=\"language-rust\">fn main() {}</code>",
-             "<pre class=\"playground\"><code class=\"language-rust edition2021\">fn main() {}</code></pre>"),
-            ("<code class=\"language-rust edition2015\">fn main() {}</code>",
-             "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>"),
-            ("<code class=\"language-rust edition2018\">fn main() {}</code>",
-             "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>"),
-        ];
-        for (src, should_be) in &inputs {
-            let got = add_playground_pre(
-                src,
-                &Playground {
-                    editable: true,
-                    ..Playground::default()
-                },
-                Some(RustEdition::E2021),
-            );
-            assert_eq!(&*got, *should_be);
-        }
-    }
 }

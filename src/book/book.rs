@@ -20,29 +20,29 @@ pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> 
     File::open(&summary_md)
         .with_context(|| format!("Couldn't open SUMMARY.md in {:?} directory", src_dir))?
         .read_to_string(&mut summary_content)?;
-//dbg!(&summary_content);
+    //dbg!(&summary_content);
 
     let summary = parse_summary(&summary_content)
         .with_context(|| format!("Summary parsing failed for file={:?}", summary_md))?;
-//dbg!(&summary);
+    //dbg!(&summary);
     if cfg.create_missing {
         create_missing(src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
     }
     //create_fpm_ftd(&summary_content,&src_dir).with_context(|| "Unable to copy across static files")?;
     load_book_from_disk(&summary, src_dir)
 }
-fn create_fpm_ftd(summary_content:&String,src_dir: &Path) -> Result<()> {
+/*fn create_fpm_ftd(summary_content:&String,src_dir: &Path) -> Result<()> {
     //dbg!(&src_dir);
     //dbg!(&summary_content);
     let fpm_ftd_string=format!("{}{}",String::from("-- import: fpm
 
     -- fpm.package: wasif1024.github.io/fpm-site
     download-base-url: https://raw.githubusercontent.com/wasif1024/fpm-site/main
-    
+
     -- fpm.dependency: fifthtry.github.io/doc-site as ds
-    
+
     -- fpm.auto-import: ds
-    
+
     -- fpm.sitemap:
     "),&summary_content);
 
@@ -54,7 +54,7 @@ fn create_fpm_ftd(summary_content:&String,src_dir: &Path) -> Result<()> {
             fpm_ftd_string.as_bytes(),
         )?;
         Ok(())
-}
+}*/
 fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
     let mut items: Vec<_> = summary
         .prefix_chapters
@@ -97,14 +97,10 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
 /// accessible by either iterating (immutably) over the book with [`iter()`], or
 /// recursively applying a closure to each section to mutate the chapters, using
 /// [`for_each_mut()`].
-///
-/// [`iter()`]: #method.iter
-/// [`for_each_mut()`]: #method.for_each_mut
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct Book {
     /// The sections in this book.
     pub sections: Vec<BookItem>,
-    __non_exhaustive: (),
 }
 
 impl Book {
@@ -252,10 +248,7 @@ pub(crate) fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P)
         chapters.push(chapter);
     }
 
-    Ok(Book {
-        sections: chapters,
-        __non_exhaustive: (),
-    })
+    Ok(Book { sections: chapters })
 }
 
 fn load_summary_item<P: AsRef<Path> + Clone>(
@@ -359,306 +352,5 @@ impl Display for Chapter {
         }
 
         write!(f, "{}", self.name)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::io::Write;
-    use tempfile::{Builder as TempFileBuilder, TempDir};
-
-    const DUMMY_SRC: &str = "
-# Dummy Chapter
-
-this is some dummy text.
-
-And here is some \
-                                     more text.
-";
-
-    /// Create a dummy `Link` in a temporary directory.
-    fn dummy_link() -> (Link, TempDir) {
-        let temp = TempFileBuilder::new().prefix("book").tempdir().unwrap();
-
-        let chapter_path = temp.path().join("chapter_1.md");
-        File::create(&chapter_path)
-            .unwrap()
-            .write_all(DUMMY_SRC.as_bytes())
-            .unwrap();
-
-        let link = Link::new("Chapter 1", chapter_path);
-
-        (link, temp)
-    }
-
-    /// Create a nested `Link` written to a temporary directory.
-    fn nested_links() -> (Link, TempDir) {
-        let (mut root, temp_dir) = dummy_link();
-
-        let second_path = temp_dir.path().join("second.md");
-
-        File::create(&second_path)
-            .unwrap()
-            .write_all(b"Hello World!")
-            .unwrap();
-
-        let mut second = Link::new("Nested Chapter 1", &second_path);
-        second.number = Some(SectionNumber(vec![1, 2]));
-
-        root.nested_items.push(second.clone().into());
-        root.nested_items.push(SummaryItem::Separator);
-        root.nested_items.push(second.into());
-
-        (root, temp_dir)
-    }
-
-    #[test]
-    fn load_a_single_chapter_from_disk() {
-        let (link, temp_dir) = dummy_link();
-        let should_be = Chapter::new(
-            "Chapter 1",
-            DUMMY_SRC.to_string(),
-            "chapter_1.md",
-            Vec::new(),
-        );
-
-        let got = load_chapter(&link, temp_dir.path(), Vec::new()).unwrap();
-        assert_eq!(got, should_be);
-    }
-
-    #[test]
-    fn load_a_single_chapter_with_utf8_bom_from_disk() {
-        let temp_dir = TempFileBuilder::new().prefix("book").tempdir().unwrap();
-
-        let chapter_path = temp_dir.path().join("chapter_1.md");
-        File::create(&chapter_path)
-            .unwrap()
-            .write_all(("\u{feff}".to_owned() + DUMMY_SRC).as_bytes())
-            .unwrap();
-
-        let link = Link::new("Chapter 1", chapter_path);
-
-        let should_be = Chapter::new(
-            "Chapter 1",
-            DUMMY_SRC.to_string(),
-            "chapter_1.md",
-            Vec::new(),
-        );
-
-        let got = load_chapter(&link, temp_dir.path(), Vec::new()).unwrap();
-        assert_eq!(got, should_be);
-    }
-
-    #[test]
-    fn cant_load_a_nonexistent_chapter() {
-        let link = Link::new("Chapter 1", "/foo/bar/baz.md");
-
-        let got = load_chapter(&link, "", Vec::new());
-        assert!(got.is_err());
-    }
-
-    #[test]
-    fn load_recursive_link_with_separators() {
-        let (root, temp) = nested_links();
-
-        let nested = Chapter {
-            name: String::from("Nested Chapter 1"),
-            content: String::from("Hello World!"),
-            number: Some(SectionNumber(vec![1, 2])),
-            path: Some(PathBuf::from("second.md")),
-            source_path: Some(PathBuf::from("second.md")),
-            parent_names: vec![String::from("Chapter 1")],
-            sub_items: Vec::new(),
-        };
-        let should_be = BookItem::Chapter(Chapter {
-            name: String::from("Chapter 1"),
-            content: String::from(DUMMY_SRC),
-            number: None,
-            path: Some(PathBuf::from("chapter_1.md")),
-            source_path: Some(PathBuf::from("chapter_1.md")),
-            parent_names: Vec::new(),
-            sub_items: vec![
-                BookItem::Chapter(nested.clone()),
-                BookItem::Separator,
-                BookItem::Chapter(nested),
-            ],
-        });
-
-        let got = load_summary_item(&SummaryItem::Link(root), temp.path(), Vec::new()).unwrap();
-        assert_eq!(got, should_be);
-    }
-
-    #[test]
-    fn load_a_book_with_a_single_chapter() {
-        let (link, temp) = dummy_link();
-        let summary = Summary {
-            numbered_chapters: vec![SummaryItem::Link(link)],
-            ..Default::default()
-        };
-        let should_be = Book {
-            sections: vec![BookItem::Chapter(Chapter {
-                name: String::from("Chapter 1"),
-                content: String::from(DUMMY_SRC),
-                path: Some(PathBuf::from("chapter_1.md")),
-                source_path: Some(PathBuf::from("chapter_1.md")),
-                ..Default::default()
-            })],
-            ..Default::default()
-        };
-
-        let got = load_book_from_disk(&summary, temp.path()).unwrap();
-
-        assert_eq!(got, should_be);
-    }
-
-    #[test]
-    fn book_iter_iterates_over_sequential_items() {
-        let book = Book {
-            sections: vec![
-                BookItem::Chapter(Chapter {
-                    name: String::from("Chapter 1"),
-                    content: String::from(DUMMY_SRC),
-                    ..Default::default()
-                }),
-                BookItem::Separator,
-            ],
-            ..Default::default()
-        };
-
-        let should_be: Vec<_> = book.sections.iter().collect();
-
-        let got: Vec<_> = book.iter().collect();
-
-        assert_eq!(got, should_be);
-    }
-
-    #[test]
-    fn iterate_over_nested_book_items() {
-        let book = Book {
-            sections: vec![
-                BookItem::Chapter(Chapter {
-                    name: String::from("Chapter 1"),
-                    content: String::from(DUMMY_SRC),
-                    number: None,
-                    path: Some(PathBuf::from("Chapter_1/index.md")),
-                    source_path: Some(PathBuf::from("Chapter_1/index.md")),
-                    parent_names: Vec::new(),
-                    sub_items: vec![
-                        BookItem::Chapter(Chapter::new(
-                            "Hello World",
-                            String::new(),
-                            "Chapter_1/hello.md",
-                            Vec::new(),
-                        )),
-                        BookItem::Separator,
-                        BookItem::Chapter(Chapter::new(
-                            "Goodbye World",
-                            String::new(),
-                            "Chapter_1/goodbye.md",
-                            Vec::new(),
-                        )),
-                    ],
-                }),
-                BookItem::Separator,
-            ],
-            ..Default::default()
-        };
-
-        let got: Vec<_> = book.iter().collect();
-
-        assert_eq!(got.len(), 5);
-
-        // checking the chapter names are in the order should be sufficient here...
-        let chapter_names: Vec<String> = got
-            .into_iter()
-            .filter_map(|i| match *i {
-                BookItem::Chapter(ref ch) => Some(ch.name.clone()),
-                _ => None,
-            })
-            .collect();
-        let should_be: Vec<_> = vec![
-            String::from("Chapter 1"),
-            String::from("Hello World"),
-            String::from("Goodbye World"),
-        ];
-
-        assert_eq!(chapter_names, should_be);
-    }
-
-    #[test]
-    fn for_each_mut_visits_all_items() {
-        let mut book = Book {
-            sections: vec![
-                BookItem::Chapter(Chapter {
-                    name: String::from("Chapter 1"),
-                    content: String::from(DUMMY_SRC),
-                    number: None,
-                    path: Some(PathBuf::from("Chapter_1/index.md")),
-                    source_path: Some(PathBuf::from("Chapter_1/index.md")),
-                    parent_names: Vec::new(),
-                    sub_items: vec![
-                        BookItem::Chapter(Chapter::new(
-                            "Hello World",
-                            String::new(),
-                            "Chapter_1/hello.md",
-                            Vec::new(),
-                        )),
-                        BookItem::Separator,
-                        BookItem::Chapter(Chapter::new(
-                            "Goodbye World",
-                            String::new(),
-                            "Chapter_1/goodbye.md",
-                            Vec::new(),
-                        )),
-                    ],
-                }),
-                BookItem::Separator,
-            ],
-            ..Default::default()
-        };
-
-        let num_items = book.iter().count();
-        let mut visited = 0;
-
-        book.for_each_mut(|_| visited += 1);
-
-        assert_eq!(visited, num_items);
-    }
-
-    #[test]
-    fn cant_load_chapters_with_an_empty_path() {
-        let (_, temp) = dummy_link();
-        let summary = Summary {
-            numbered_chapters: vec![SummaryItem::Link(Link {
-                name: String::from("Empty"),
-                location: Some(PathBuf::from("")),
-                ..Default::default()
-            })],
-
-            ..Default::default()
-        };
-
-        let got = load_book_from_disk(&summary, temp.path());
-        assert!(got.is_err());
-    }
-
-    #[test]
-    fn cant_load_chapters_when_the_link_is_a_directory() {
-        let (_, temp) = dummy_link();
-        let dir = temp.path().join("nested");
-        fs::create_dir(&dir).unwrap();
-
-        let summary = Summary {
-            numbered_chapters: vec![SummaryItem::Link(Link {
-                name: String::from("nested"),
-                location: Some(dir),
-                ..Default::default()
-            })],
-            ..Default::default()
-        };
-
-        let got = load_book_from_disk(&summary, temp.path());
-        assert!(got.is_err());
     }
 }

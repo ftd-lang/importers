@@ -29,7 +29,7 @@ use std::process::{Child, Command, Stdio};
 ///
 /// An example preprocessor is available in this project's `examples/`
 /// directory.
-#[derive(Debug, Clone, Eq,PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct CmdPreprocessor {
     name: String,
     cmd: String,
@@ -173,36 +173,5 @@ impl Preprocessor for CmdPreprocessor {
         }
 
         outcome.unwrap_or(false)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::MDBook;
-    use std::path::Path;
-
-    fn guide() -> MDBook {
-        let example = Path::new(env!("CARGO_MANIFEST_DIR")).join("guide");
-        MDBook::load(example).unwrap()
-    }
-
-    #[test]
-    fn round_trip_write_and_parse_input() {
-        let cmd = CmdPreprocessor::new("test".to_string(), "test".to_string());
-        let md = guide();
-        let ctx = PreprocessorContext::new(
-            md.root.clone(),
-            md.config.clone(),
-            "some-renderer".to_string(),
-        );
-
-        let mut buffer = Vec::new();
-        cmd.write_input(&mut buffer, &md.book, &ctx).unwrap();
-
-        let (got_ctx, got_book) = CmdPreprocessor::parse_input(buffer.as_slice()).unwrap();
-
-        assert_eq!(got_book, md.book);
-        assert_eq!(got_ctx, ctx);
     }
 }

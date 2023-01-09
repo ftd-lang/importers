@@ -115,7 +115,7 @@ impl HtmlHandlebars {
         // Write to file
 
         //dbg!("Creating {}", filepath.display());
-        dbg!(&ctx.destination);
+
         utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
        
         if ctx.is_index {

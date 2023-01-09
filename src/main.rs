@@ -2,15 +2,9 @@
 extern crate clap;
 extern crate log;
 
-use anyhow::anyhow;
-use chrono::Local;
-use clap::{Arg, ArgMatches, Command};
-use clap_complete::Shell;
-use env_logger::Builder;
-use log::LevelFilter;
-use fpm_importer::utils;
+use clap::{ArgMatches, Command};
+
 use std::env;
-use std::io::Write;
 use std::path::PathBuf;
 
 mod cmd;
@@ -18,42 +12,22 @@ mod cmd;
 const VERSION: &str = concat!("v", crate_version!());
 
 fn main() {
-    init_logger();
+
 
     let command = create_clap_command();
 
     // Check which subcommand the user ran...
-    let res = match command.get_matches().subcommand() {
+    match command.get_matches().subcommand() {
         Some(("build", sub_matches)) => cmd::build::execute(sub_matches),
-        Some(("completions", sub_matches)) => (|| {
-            let shell = sub_matches
-                .get_one::<Shell>("shell")
-                .ok_or_else(|| anyhow!("Shell name missing."))?;
-
-            let mut complete_app = create_clap_command();
-            clap_complete::generate(
-                *shell,
-                &mut complete_app,
-                "mdbook",
-                &mut std::io::stdout().lock(),
-            );
-            Ok(())
-        })(),
         _ => unreachable!(),
     };
 
-    if let Err(e) = res {
-        utils::log_backtrace(&e);
-
-        std::process::exit(101);
-    }
 }
 
 /// Create a list of valid arguments and sub-commands
 fn create_clap_command() -> Command {
     Command::new(crate_name!())
         .about(crate_description!())
-        .author("Mathieu David <mathieudavid@mathieudavid.org>")
         .version(VERSION)
         .propagate_version(true)
         .arg_required_else_help(true)
@@ -62,43 +36,7 @@ fn create_clap_command() -> Command {
              The source code for mdBook is available at: https://github.com/rust-lang/mdBook",
         )
         .subcommand(cmd::build::make_subcommand())
-        .subcommand(
-            Command::new("completions")
-                .about("Generate shell completions for your shell to stdout")
-                .arg(
-                    Arg::new("shell")
-                        .value_parser(clap::value_parser!(Shell))
-                        .help("the shell to generate completions for")
-                        .value_name("SHELL")
-                        .required(true),
-                ),
-        )
-}
 
-fn init_logger() {
-    let mut builder = Builder::new();
-
-    builder.format(|formatter, record| {
-        writeln!(
-            formatter,
-            "{} [{}] ({}): {}",
-            Local::now().format("%Y-%m-%d %H:%M:%S"),
-            record.level(),
-            record.target(),
-            record.args()
-        )
-    });
-
-    if let Ok(var) = env::var("RUST_LOG") {
-        builder.parse_filters(&var);
-    } else {
-        // if no RUST_LOG provided, default to logging at the Info level
-        builder.filter(None, LevelFilter::Info);
-        // Filter extraneous html5ever not-implemented messages
-        builder.filter(Some("html5ever"), LevelFilter::Error);
-    }
-
-    builder.init();
 }
 
 fn get_book_dir(args: &ArgMatches) -> PathBuf {

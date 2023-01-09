@@ -103,7 +103,7 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
             if let Some(path) = path {
                 let mut base = path.display().to_string();
                 if base.ends_with(".md") {
-                    base.replace_range(base.len() - 3.., ".html");
+                    base.replace_range(base.len() - 3.., ".ftd");
                 }
                 return format!("/{}/{}", base, dest).into();
             } else {
@@ -129,7 +129,7 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
             if let Some(caps) = MD_LINK.captures(&dest) {
                 //dbg!("came here");
                 fixed_link.push_str(&caps["link"]);
-                fixed_link.push_str(".html");
+                fixed_link.push_str(".ftd");
                 if let Some(anchor) = caps.name("anchor") {
                     fixed_link.push_str(anchor.as_str());
                 }
@@ -194,62 +194,95 @@ pub fn new_cmark_parser(text: &str, curly_quotes: bool) -> Parser<'_, '_> {
 }
 
 pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&Path>) -> String {
-    //dbg!(&text);
-    //text.to_string()
-    //dbg!(&path);
-    //let mut s = String::with_capacity(text.len() * 3 / 2);
+    let mut rendered_docsite = String::with_capacity(text.len() * 3 / 2);
     let p = new_cmark_parser(text, curly_quotes);
     /*for obj in p{
         dbg!(obj);
     }*/
     let events = p
         .map(clean_codeblock_headers)
-        .map(|event| {adjust_links(event, path)})
+        .map(|event| adjust_links(event, path))
         .flat_map(|event| {
             let (a, b) = wrap_tables(event);
 
             a.into_iter().chain(b)
         });
-        for event in events{
-            match &event{
-                Event::Start(tag) => println!("Start: {:?}", tag),
-            Event::End(tag) => println!("End: {:?}", tag),
-            Event::Html(s) => println!("Html: {:?}", s),
-            Event::Text(s) => println!("Text: {:?}", s),
-            Event::Code(s) => println!("Code: {:?}", s),
-            Event::FootnoteReference(s) => println!("FootnoteReference: {:?}", s),
-            Event::TaskListMarker(b) => println!("TaskListMarker: {:?}", b),
-            Event::SoftBreak => println!("SoftBreak"),
-            Event::HardBreak => println!("HardBreak"),
-            Event::Rule => println!("Rule"),
-            }
-            //dbg!(event);
-          
-        }
-    /*let events = p
-        .map(clean_codeblock_headers)
-        .map(|event| {dbg!(&event);adjust_links(event, path)})
-        .flat_map(|event| {
-            dbg!(&event);
-            let (a, b) = wrap_tables(event);
+    for event in events {
+        rendered_docsite = format!("{}{}", rendered_docsite, render_to_docsite(event));
+        //dbg!(event);
+    }
 
-            a.into_iter().chain(b)
-        });
-    //dbg!("yes");
-    //let resp=render_to_docsite(events);
-    //text.to_string()
-    html::push_html(&mut s, events);
-    s*/
-    text.to_string()
+    rendered_docsite
 }
-/*pub fn render_to_docsite(events:Events)->String{
-    events.map(|event| {
-        dbg!(event);
-    });
-}*/
+pub fn render_to_docsite(event: Event) -> String {
+    let mut result_str = String::from("");
+    let mut tag_type = String::from("heading");
+    match &event {
+        Event::Start(tag) => match tag {
+            Tag::Heading(heading_level, _fragment_identifier, _class_list) => {
+                tag_type="heading".to_string();
+                result_str = format!(r##"-- ds.{heading_level}: "##);
+            }
+            Tag::Paragraph => {
+                tag_type="paragrapgh".to_string();
+                result_str = r##"-- ds.markdown: "##.to_string();
+            },
+            Tag::Link(link_type, url, title) => println!(
+                "Link link_type: {:?} url: {} title: {}",
+                link_type, url, title
+            ),
+            Tag::List(ordered_list_first_item_number) => println!(
+                "List ordered_list_first_item_number: {:?}",
+                ordered_list_first_item_number
+            ),
+            Tag::Item => println!("Item (this is a list item)"),
+            Tag::Emphasis => println!("Emphasis (this is a span tag)"),
+            Tag::Strong => println!("Strong (this is a span tag)"),
+            Tag::Strikethrough => println!("Strikethrough (this is a span tag)"),
+            Tag::BlockQuote => println!("BlockQuote"),
+            Tag::CodeBlock(code_block_kind) => {
+                println!("CodeBlock code_block_kind: {:?}", code_block_kind)
+            }
+            Tag::Image(link_type, url, title) => println!(
+                "Image link_type: {:?} url: {} title: {}",
+                link_type, url, title
+            ),
+            Tag::Table(column_text_alignment_list) => println!(
+                "Table column_text_alignment_list: {:?}",
+                column_text_alignment_list
+            ),
+            Tag::TableHead => println!("TableHead (contains TableRow tags"),
+            Tag::TableRow => println!("TableRow (contains TableCell tags)"),
+            Tag::TableCell => println!("TableCell (contains inline tags)"),
+            Tag::FootnoteDefinition(label) => println!("FootnoteDefinition label: {}", label),
+        },
+        Event::Text(s) => {
+            if tag_type=="heading"{
+                result_str = format!(r##" {s}"##,)
+            }else{
+                result_str = format!(r##"
+                {s}"##,)
+            }
+            
+            //println!("Text: {:?}", s.trim())
+        }
+        Event::SoftBreak => println!("SoftBreak"),
+        Event::HardBreak => println!("HardBreak"),
+        /*Event::End(tag) => println!("End: {:?}", tag),
+        Event::Html(s) => println!("Html: {:?}", s),
+        Event::Text(s) => println!("Text: {:?}", s),
+        Event::Code(s) => println!("Code: {:?}", s),
+        Event::FootnoteReference(s) => println!("FootnoteReference: {:?}", s),
+        Event::TaskListMarker(b) => println!("TaskListMarker: {:?}", b),
+
+        Event::Rule => println!("Rule"),*/
+        _ => (),
+    }
+    //String::from("yes")
+    result_str
+}
 /// Wraps tables in a `.table-wrapper` class to apply overflow-x rules to.
 fn wrap_tables(event: Event<'_>) -> (Option<Event<'_>>, Option<Event<'_>>) {
-    
     match event {
         Event::Start(Tag::Table(_)) => (
             Some(Event::Html(r#"<div class="table-wrapper">"#.into())),

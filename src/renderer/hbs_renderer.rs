@@ -208,8 +208,8 @@ impl HtmlHandlebars {
     ) -> String {
         //dbg!(&rendered);
         let rendered = embed_title(&rendered, title);
-        let rendered = build_header_links(&rendered);
-        let rendered = build_paragraph_with_markdown(&rendered);
+        //let rendered = build_header_links(&rendered);
+        //let rendered = build_paragraph_with_markdown(&rendered);
         //dbg!("headers",&rendered);
         let rendered = fix_code_blocks(&rendered);
         //dbg!("block",&rendered);
@@ -529,7 +529,7 @@ fn make_data(
 
 /// Goes through the rendered HTML, making sure all header tags have
 /// an anchor respectively so people can link to sections directly.
-fn build_header_links(html: &str) -> String {
+/*fn build_header_links(html: &str) -> String {
     static BUILD_HEADER_LINKS: Lazy<Regex> =
         Lazy::new(|| Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap());
 
@@ -545,13 +545,13 @@ fn build_header_links(html: &str) -> String {
             insert_link_into_header(level, &caps[2], &mut id_counter)
         })
         .into_owned()
-}
+}*/
 fn embed_title(html: &str, title: &String) -> String {
     static BUILD_HEADER_LINKS: Lazy<Regex> =
         Lazy::new(|| Regex::new(r"<title>(.*?)</title>").unwrap());
     BUILD_HEADER_LINKS.replace_all(html, title).into_owned()
 }
-fn build_paragraph_with_markdown(html: &str) -> String {
+/*fn build_paragraph_with_markdown(html: &str) -> String {
     //dbg!(&html);
     static PARAGRAPH_ELEMENTS: Lazy<Regex> = Lazy::new(|| Regex::new(r#"<p>(.*?)</p>"#).unwrap());
     PARAGRAPH_ELEMENTS
@@ -561,7 +561,7 @@ fn build_paragraph_with_markdown(html: &str) -> String {
             insert_markdown_into_paragraph(&caps[1])
         })
         .into_owned()
-}
+}*/
 fn remove_whitespaces(html: &str) -> String {
     static PARAGRAPH_ELEMENTS: Lazy<Regex> =
         Lazy::new(|| Regex::new(r#"(?m)^ +| +$| +( )"#).unwrap());
@@ -571,7 +571,7 @@ fn remove_whitespaces(html: &str) -> String {
 }
 /// Insert a sinle link into a header, making sure each link gets its own
 /// unique ID by appending an auto-incremented number (if necessary).
-fn insert_link_into_header(
+/*fn insert_link_into_header(
     level: usize,
     content: &str,
     id_counter: &mut HashMap<String, usize>,
@@ -590,7 +590,7 @@ fn insert_markdown_into_paragraph(content: &str) -> String {
         "##,
         text = content
     )
-}
+}*/
 
 // ```
 // This function replaces all commas by spaces in the code block classes

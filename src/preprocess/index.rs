@@ -59,7 +59,7 @@ fn warn_readme_name_conflict<P: AsRef<Path>>(readme_path: P, index_path: P) {
         parent_dir.display()
     );
     warn!(
-        "mdbook converts {:?} into index.html by default. It may cause",
+        "mdbook converts {:?} into index.ftd by default. It may cause",
         file_name
     );
     warn!("unexpected behavior if putting both files under the same directory.");

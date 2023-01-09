@@ -196,6 +196,8 @@ pub fn new_cmark_parser(text: &str, curly_quotes: bool) -> Parser<'_, '_> {
 pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&Path>) -> String {
     let mut rendered_docsite = String::with_capacity(text.len() * 3 / 2);
     let p = new_cmark_parser(text, curly_quotes);
+    let mut parsed_str:String;
+    let mut current_tag:String=String::from("");
     /*for obj in p{
         dbg!(obj);
     }*/
@@ -208,23 +210,24 @@ pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&P
             a.into_iter().chain(b)
         });
     for event in events {
-        rendered_docsite = format!("{}{}", rendered_docsite, render_to_docsite(event));
+        (parsed_str,current_tag)= render_to_docsite(event,current_tag);
+        rendered_docsite = format!("{}{}", rendered_docsite, parsed_str);
         //dbg!(event);
     }
 
     rendered_docsite
 }
-pub fn render_to_docsite(event: Event) -> String {
+pub fn render_to_docsite(event: Event,mut current_tag:String) -> (String,String) {
     let mut result_str = String::from("");
-    let mut tag_type = String::from("heading");
+    //let mut tag_type = String::from("heading");
     match &event {
         Event::Start(tag) => match tag {
             Tag::Heading(heading_level, _fragment_identifier, _class_list) => {
-                tag_type="heading".to_string();
+                current_tag="heading".to_string();
                 result_str = format!(r##"-- ds.{heading_level}: "##);
             }
             Tag::Paragraph => {
-                tag_type="paragrapgh".to_string();
+                current_tag="paragrapgh".to_string();
                 result_str = r##"-- ds.markdown: "##.to_string();
             },
             Tag::Link(link_type, url, title) => println!(
@@ -257,11 +260,14 @@ pub fn render_to_docsite(event: Event) -> String {
             Tag::FootnoteDefinition(label) => println!("FootnoteDefinition label: {}", label),
         },
         Event::Text(s) => {
-            if tag_type=="heading"{
-                result_str = format!(r##" {s}"##,)
+            if current_tag==*"heading"{
+                result_str = format!(r##" {s}
+                "##,);
             }else{
                 result_str = format!(r##"
-                {s}"##,)
+
+                {s}
+                "##,);
             }
             
             //println!("Text: {:?}", s.trim())
@@ -276,10 +282,10 @@ pub fn render_to_docsite(event: Event) -> String {
         Event::TaskListMarker(b) => println!("TaskListMarker: {:?}", b),
 
         Event::Rule => println!("Rule"),*/
-        _ => (),
+        _ => {},
     }
     //String::from("yes")
-    result_str
+    (result_str,current_tag)
 }
 /// Wraps tables in a `.table-wrapper` class to apply overflow-x rules to.
 fn wrap_tables(event: Event<'_>) -> (Option<Event<'_>>, Option<Event<'_>>) {

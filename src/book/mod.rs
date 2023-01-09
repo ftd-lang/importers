@@ -17,7 +17,7 @@ use crate::preprocess::{
 };
 use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer, RenderContext, Renderer};
 
-use crate::config::{Config};
+use crate::config::Config;
 
 /// The object used to manage and build a book.
 pub struct MDBook {
@@ -104,7 +104,6 @@ impl MDBook {
         self.book.iter()
     }
 
-
     /// Tells the renderer to build our book and put it in the build directory.
     pub fn build(&self) -> Result<()> {
         for renderer in &self.renderers {
@@ -164,7 +163,6 @@ impl MDBook {
         self.preprocessors.push(Box::new(preprocessor));
         self
     }
-
 
     ///
     pub fn build_dir_for(&self, backend_name: &str) -> PathBuf {
@@ -312,7 +310,6 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>
                 "links" => Box::new(LinkPreprocessor::new()),
                 "index" => Box::new(IndexPreprocessor::new()),
                 _ => {
-                   
                     let table = &config.get("preprocessor").unwrap().as_table().unwrap()[&name];
                     let command = get_custom_preprocessor_cmd(&name, table);
                     Box::new(CmdPreprocessor::new(name, command))

@@ -8,14 +8,11 @@ use crate::errors::*;
 use log::warn;
 pub static INDEX: &[u8] = include_bytes!("index.hbs");
 
-
-
 /// You should only ever use the static variables directly if you want to
 /// override the user's theme with the defaults.
 #[derive(Debug, Eq, PartialEq)]
 pub struct Theme {
     pub index: Vec<u8>,
-   
 }
 
 impl Theme {
@@ -32,9 +29,7 @@ impl Theme {
 
         // Check for individual files, if they exist copy them across
         {
-            let files = vec![
-                (theme_dir.join("index.hbs"), &mut theme.index),
-            ];
+            let files = vec![(theme_dir.join("index.hbs"), &mut theme.index)];
 
             let load_with_warn = |filename: &Path, dest| {
                 if !filename.exists() {
@@ -52,7 +47,6 @@ impl Theme {
             for (filename, dest) in files {
                 load_with_warn(&filename, dest);
             }
-
         }
 
         theme

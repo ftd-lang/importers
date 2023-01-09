@@ -1,4 +1,3 @@
-
 use log::{debug, trace};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
@@ -156,7 +155,6 @@ impl Config {
         let key = format!("preprocessor.{}", index.as_ref());
         self.get(&key).and_then(Value::as_table)
     }
-
 }
 
 impl Default for Config {
@@ -173,7 +171,6 @@ impl Default for Config {
 impl<'de> serde::Deserialize<'de> for Config {
     fn deserialize<D: Deserializer<'de>>(de: D) -> std::result::Result<Self, D::Error> {
         let raw = Value::deserialize(de)?;
-
 
         use serde::de::Error;
         let mut table = match raw {

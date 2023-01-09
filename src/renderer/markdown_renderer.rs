@@ -25,7 +25,7 @@ impl Renderer for MarkdownRenderer {
     fn render(&self, ctx: &RenderContext) -> Result<()> {
         let destination = &ctx.destination;
         let book = &ctx.book;
-dbg!(&ctx.destination);
+        dbg!(&ctx.destination);
         if destination.exists() {
             utils::fs::remove_dir_content(destination)
                 .with_context(|| "Unable to remove stale Markdown output")?;

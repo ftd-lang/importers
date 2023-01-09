@@ -1,4 +1,3 @@
-
 //! [RenderContext]: struct.RenderContext.html
 
 pub use self::hbs_renderer::HtmlHandlebars;
@@ -23,40 +22,18 @@ use toml::Value;
 
 use serde::{Deserialize, Serialize};
 
-/// An arbitrary `mdbook` backend.
-///
-/// Although it's quite possible for you to import `mdbook` as a library and
-/// provide your own renderer, there are two main renderer implementations that
-/// 99% of users will ever use:
-///
-/// - [`HtmlHandlebars`] - the built-in HTML renderer
-/// - [`CmdRenderer`] - a generic renderer which shells out to a program to do the
-///   actual rendering
 pub trait Renderer {
-    /// The `Renderer`'s name.
     fn name(&self) -> &str;
 
-    /// Invoke the `Renderer`, passing in all the necessary information for
-    /// describing a book.
     fn render(&self, ctx: &RenderContext) -> Result<()>;
 }
 
 /// The context provided to all renderers.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RenderContext {
-    /// Which version of `mdbook` did this come from (as written in `mdbook`'s
-    /// `Cargo.toml`). Useful if you know the renderer is only compatible with
-    /// certain versions of `mdbook`.
-    pub version: String,
-    /// The book's root directory.
     pub root: PathBuf,
-    /// A loaded representation of the book itself.
     pub book: Book,
-    /// The loaded configuration file.
     pub config: Config,
-    /// Where the renderer *must* put any build artefacts generated. To allow
-    /// renderers to cache intermediate results, this directory is not
-    /// guaranteed to be empty or even exist.
     pub destination: PathBuf,
     #[serde(skip)]
     pub(crate) chapter_titles: HashMap<PathBuf, String>,
@@ -74,7 +51,6 @@ impl RenderContext {
         RenderContext {
             book,
             config,
-            version: crate::MDBOOK_VERSION.to_string(),
             root: root.into(),
             destination: destination.into(),
             chapter_titles: HashMap::new(),

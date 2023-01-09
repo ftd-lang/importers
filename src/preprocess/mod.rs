@@ -28,7 +28,6 @@ pub struct PreprocessorContext {
     /// The `Renderer` this preprocessor is being used with.
     pub renderer: String,
     /// The calling `mdbook` version.
-    pub mdbook_version: String,
     #[serde(skip)]
     pub(crate) chapter_titles: RefCell<HashMap<PathBuf, String>>,
     #[serde(skip)]
@@ -42,7 +41,6 @@ impl PreprocessorContext {
             root,
             config,
             renderer,
-            mdbook_version: crate::MDBOOK_VERSION.to_string(),
             chapter_titles: RefCell::new(HashMap::new()),
             __non_exhaustive: (),
         }

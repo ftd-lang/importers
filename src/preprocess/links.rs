@@ -16,7 +16,6 @@ use once_cell::sync::Lazy;
 const ESCAPE_CHAR: char = '\\';
 const MAX_LINK_NESTED_DEPTH: usize = 10;
 
-
 /// - `{{# title}}` - Override \<title\> of a webpage.
 #[derive(Default)]
 pub struct LinkPreprocessor;

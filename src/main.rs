@@ -13,7 +13,7 @@ fn get_files_dir(dir_name: &str) -> PathBuf {
     // Check if path is relative from current dir, or absolute...
     let mut path = PathBuf::new();
     path.push(dir_name);
-    dbg!(&path);
+    //dbg!(&path);
     if path.is_relative() {
         env::current_dir().unwrap().join(path)
     } else {

@@ -116,7 +116,7 @@ impl HtmlHandlebars {
         //dbg!("Creating {}", filepath.display());
 
         utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
-       
+
         if ctx.is_index {
             ctx.data.insert("path".to_owned(), json!("index.md"));
             ctx.data.insert("path_to_root".to_owned(), json!(""));
@@ -242,7 +242,6 @@ impl HtmlHandlebars {
             )
             .as_bytes(),
         )?;
-        
 
         Ok(())
     }
@@ -264,9 +263,6 @@ impl HtmlHandlebars {
             json!(utils::fs::path_to_root(Path::new("print.md"))),
         );
     }
-
-    
-
 
     fn emit_redirects(
         &self,
@@ -363,7 +359,7 @@ impl Renderer for HtmlHandlebars {
         let destination = &ctx.destination;
         let book = &ctx.book;
         let build_dir = ctx.root.join(&ctx.config.build.build_dir);
-
+        //dbg!(&book);
         if destination.exists() {
             utils::fs::remove_dir_content(destination)
                 .with_context(|| "Unable to remove stale HTML output")?;
@@ -398,8 +394,6 @@ impl Renderer for HtmlHandlebars {
         debug!("Register the index handlebars template");
         handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
 
-
-        
         //dbg!("html_config",&html_config);
         //dbg!("handle-bars",&handlebars);
         //dbg!("Mdbook",&book);
@@ -468,7 +462,8 @@ fn make_data(
     html_config: &HtmlConfig,
     _theme: &Theme,
 ) -> Result<serde_json::Map<String, serde_json::Value>> {
-    trace!("make_data");
+    //dbg!(&book);
+    //trace!("make_data");
     //dbg!("make data");
     let mut data = serde_json::Map::new();
     data.insert(
@@ -483,16 +478,15 @@ fn make_data(
         "description".to_owned(),
         json!(config.book.description.clone().unwrap_or_default()),
     );
-   
 
     data.insert("print_enable".to_owned(), json!(html_config.print.enable));
     data.insert("fold_enable".to_owned(), json!(html_config.fold.enable));
     data.insert("fold_level".to_owned(), json!(html_config.fold.level));
 
-
     let mut chapters = vec![];
 
     for item in book.iter() {
+        //item
         // Create the data to inject in the template
         let mut chapter = BTreeMap::new();
 
@@ -529,7 +523,7 @@ fn make_data(
     data.insert("chapters".to_owned(), json!(chapters));
     //dbg!("data json");
     //dbg!(&data);
-    debug!("[*]: JSON constructed");
+    //debug!("[*]: JSON constructed");
     Ok(data)
 }
 

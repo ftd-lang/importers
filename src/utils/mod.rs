@@ -6,7 +6,7 @@ pub(crate) mod toml_ext;
 use crate::errors::Error;
 use log::error;
 use once_cell::sync::Lazy;
-use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag};
+use pulldown_cmark::{CodeBlockKind, CowStr, Event, Options, Parser, Tag};
 use regex::Regex;
 
 use std::borrow::Cow;
@@ -105,7 +105,7 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
                 if base.ends_with(".md") {
                     base.replace_range(base.len() - 3.., ".html");
                 }
-                return format!("{}{}", base, dest).into();
+                return format!("/{}/{}", base, dest).into();
             } else {
                 return dest;
             }
@@ -115,6 +115,7 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
             // This is a relative link, adjust it as necessary.
             let mut fixed_link = String::new();
             if let Some(path) = path {
+                //dbg!("came here1");
                 let base = path
                     .parent()
                     .expect("path can't be empty")
@@ -126,6 +127,7 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
             }
 
             if let Some(caps) = MD_LINK.captures(&dest) {
+                //dbg!("came here");
                 fixed_link.push_str(&caps["link"]);
                 fixed_link.push_str(".html");
                 if let Some(anchor) = caps.name("anchor") {
@@ -178,6 +180,7 @@ pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
 }
 
 pub fn new_cmark_parser(text: &str, curly_quotes: bool) -> Parser<'_, '_> {
+    //dbg!(&text);
     let mut opts = Options::empty();
     opts.insert(Options::ENABLE_TABLES);
     opts.insert(Options::ENABLE_FOOTNOTES);
@@ -186,26 +189,67 @@ pub fn new_cmark_parser(text: &str, curly_quotes: bool) -> Parser<'_, '_> {
     if curly_quotes {
         opts.insert(Options::ENABLE_SMART_PUNCTUATION);
     }
+    //dbg!(&opts);
     Parser::new_ext(text, opts)
 }
 
 pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&Path>) -> String {
     //dbg!(&text);
-    let mut s = String::with_capacity(text.len() * 3 / 2);
+    //text.to_string()
+    //dbg!(&path);
+    //let mut s = String::with_capacity(text.len() * 3 / 2);
     let p = new_cmark_parser(text, curly_quotes);
+    /*for obj in p{
+        dbg!(obj);
+    }*/
     let events = p
         .map(clean_codeblock_headers)
-        .map(|event| adjust_links(event, path))
+        .map(|event| {adjust_links(event, path)})
         .flat_map(|event| {
             let (a, b) = wrap_tables(event);
+
             a.into_iter().chain(b)
         });
-    html::push_html(&mut s, events);
-    s
-}
+        for event in events{
+            match &event{
+                Event::Start(tag) => println!("Start: {:?}", tag),
+            Event::End(tag) => println!("End: {:?}", tag),
+            Event::Html(s) => println!("Html: {:?}", s),
+            Event::Text(s) => println!("Text: {:?}", s),
+            Event::Code(s) => println!("Code: {:?}", s),
+            Event::FootnoteReference(s) => println!("FootnoteReference: {:?}", s),
+            Event::TaskListMarker(b) => println!("TaskListMarker: {:?}", b),
+            Event::SoftBreak => println!("SoftBreak"),
+            Event::HardBreak => println!("HardBreak"),
+            Event::Rule => println!("Rule"),
+            }
+            //dbg!(event);
+          
+        }
+    /*let events = p
+        .map(clean_codeblock_headers)
+        .map(|event| {dbg!(&event);adjust_links(event, path)})
+        .flat_map(|event| {
+            dbg!(&event);
+            let (a, b) = wrap_tables(event);
 
+            a.into_iter().chain(b)
+        });
+    //dbg!("yes");
+    //let resp=render_to_docsite(events);
+    //text.to_string()
+    html::push_html(&mut s, events);
+    s*/
+    text.to_string()
+}
+/*pub fn render_to_docsite(events:Events)->String{
+    events.map(|event| {
+        dbg!(event);
+    });
+}*/
 /// Wraps tables in a `.table-wrapper` class to apply overflow-x rules to.
 fn wrap_tables(event: Event<'_>) -> (Option<Event<'_>>, Option<Event<'_>>) {
+    
     match event {
         Event::Start(Tag::Table(_)) => (
             Some(Event::Html(r#"<div class="table-wrapper">"#.into())),

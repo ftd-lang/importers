@@ -132,7 +132,6 @@ impl MDBook {
             }
         }
         let name = renderer.name();
-        dbg!(&name);
         let build_dir = self.build_dir_for(name);
 
         let mut render_context = RenderContext::new(

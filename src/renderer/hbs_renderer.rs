@@ -132,8 +132,7 @@ impl HtmlHandlebars {
                 &title,
             );
 
-            debug!("Creating index.html from {}", ctx_path);
-            dbg!(&ctx.destination);
+            //dbg!(&ctx.destination);
             utils::fs::write_file(&ctx.destination, "index.ftd", rendered_index.as_bytes())?;
         }
 

@@ -1,7 +1,6 @@
 use crate::book::{Book, BookItem};
 use crate::config::{BookConfig, Config, HtmlConfig, Playground, RustEdition};
 use crate::errors::*;
-//use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
 use crate::theme::{self, Theme};
 use crate::utils;
@@ -117,7 +116,7 @@ impl HtmlHandlebars {
         //dbg!("Creating {}", filepath.display());
 
         utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
-
+       
         if ctx.is_index {
             ctx.data.insert("path".to_owned(), json!("index.md"));
             ctx.data.insert("path_to_root".to_owned(), json!(""));
@@ -243,6 +242,7 @@ impl HtmlHandlebars {
             )
             .as_bytes(),
         )?;
+        
 
         Ok(())
     }
@@ -264,6 +264,9 @@ impl HtmlHandlebars {
             json!(utils::fs::path_to_root(Path::new("print.md"))),
         );
     }
+
+    
+
 
     fn emit_redirects(
         &self,
@@ -395,6 +398,8 @@ impl Renderer for HtmlHandlebars {
         debug!("Register the index handlebars template");
         handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
 
+
+        
         //dbg!("html_config",&html_config);
         //dbg!("handle-bars",&handlebars);
         //dbg!("Mdbook",&book);
@@ -478,10 +483,12 @@ fn make_data(
         "description".to_owned(),
         json!(config.book.description.clone().unwrap_or_default()),
     );
+   
 
     data.insert("print_enable".to_owned(), json!(html_config.print.enable));
     data.insert("fold_enable".to_owned(), json!(html_config.fold.enable));
     data.insert("fold_level".to_owned(), json!(html_config.fold.level));
+
 
     let mut chapters = vec![];
 

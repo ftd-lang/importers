@@ -30,12 +30,15 @@ impl HtmlHandlebars {
         item: &BookItem,
         mut ctx: RenderItemContext<'_>,
         print_content: &mut String,
-    ) -> Result<()> {
-        // FIXME: This should be made DRY-er and rely less on mutable state
-
+    ) -> Result<String> {
+        let mut section_str = "".to_string();
+        //let path_full_str;
+        let mut item_title = "".to_string();
+        let mut item_path = "".to_string();
+        //dbg!(&item);
         let (ch, path) = match item {
             BookItem::Chapter(ch) if !ch.is_draft_chapter() => (ch, ch.path.as_ref().unwrap()),
-            _ => return Ok(()),
+            _ => return Ok("".to_string()),
         };
 
         if let Some(ref edit_url_template) = ctx.html_config.edit_url_template {
@@ -51,7 +54,7 @@ impl HtmlHandlebars {
             ctx.data
                 .insert("git_repository_edit_url".to_owned(), json!(edit_url));
         }
-
+        //dbg!(&ch);
         let content = ch.content.clone();
         let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
 
@@ -107,7 +110,38 @@ impl HtmlHandlebars {
         // Render the handlebars template with the data
         //debug!("Render template");
         let rendered = ctx.handlebars.render("index", &ctx.data)?;
+        if ctx.data.get("section").is_some() {
+            let total_dots = &ctx
+                .data
+                .get("section")
+                .unwrap()
+                .to_string()
+                .split('.')
+                .count()
+                - 1;
+            for _x in 0..total_dots - 1 {
+                section_str = format!("{} {}", section_str, "");
+            }
+            section_str = format!("{}{} ", section_str, "-");
+        }
+        if ctx.data.get("title").is_some() {
+            item_title = ctx.data.get("title").unwrap().to_string();
+        }
 
+        if ctx.data.get("path").is_some() {
+            item_path = ctx.data
+                    .get("path")
+                    .unwrap()
+                    .to_string()
+                    .replace(".md", "");
+        }
+        let path_full_str=if section_str.is_empty() {
+            format!("- {}: /{}/", item_title, item_path)
+        } else {
+            format!("{}{}: /{}/", section_str, item_title, item_path)
+        };
+
+        //dbg!(&path_full_str);
         let rendered =
             self.post_process(rendered, &ctx.html_config.playground, ctx.edition, &title);
         //dbg!(&filepath);
@@ -135,7 +169,7 @@ impl HtmlHandlebars {
             utils::fs::write_file(&ctx.destination, "index.ftd", rendered_index.as_bytes())?;
         }
 
-        Ok(())
+        Ok(path_full_str)
     }
 
     fn render_404(
@@ -218,30 +252,10 @@ impl HtmlHandlebars {
         rendered
     }
 
-    fn copy_static_files(&self, destination: &Path) -> Result<()> {
+    fn copy_static_files(&self, destination: &Path, ftd_str: String) -> Result<()> {
         use crate::utils::fs::write_file;
 
-        write_file(
-            destination,
-            "FPM.ftd",
-            remove_whitespaces(
-                "-- import: fpm
-
-            -- fpm.package: wasif1024.github.io/fpm-site
-            download-base-url: https://raw.githubusercontent.com/wasif1024/fpm-site/main
-            
-            -- fpm.dependency: fifthtry.github.io/doc-site as ds
-            
-            -- fpm.auto-import: ds
-            
-            -- fpm.sitemap:
-            
-            # Home: /
-            nav-title: Home
-            data: Section Data",
-            )
-            .as_bytes(),
-        )?;
+        write_file(destination, "FPM.ftd", ftd_str.as_bytes())?;
 
         Ok(())
     }
@@ -359,6 +373,22 @@ impl Renderer for HtmlHandlebars {
         let destination = &ctx.destination;
         let book = &ctx.book;
         let build_dir = ctx.root.join(&ctx.config.build.build_dir);
+        let mut fpm_ftd_file_str = remove_whitespaces(
+            "-- import: fpm
+
+        -- fpm.package: wasif1024.github.io/fpm-site
+        download-base-url: https://raw.githubusercontent.com/wasif1024/fpm-site/main
+        
+        -- fpm.dependency: fifthtry.github.io/doc-site as ds
+        
+        -- fpm.auto-import: ds
+        
+        -- fpm.sitemap:
+        
+        # Home: /
+        nav-title: Home
+        data: Section Data",
+        );
         //dbg!(&book);
         if destination.exists() {
             utils::fs::remove_dir_content(destination)
@@ -405,7 +435,11 @@ impl Renderer for HtmlHandlebars {
             .with_context(|| "Unexpected error when constructing destination path")?;
 
         let mut is_index = true;
+
         for item in book.iter() {
+            //dbg!(&item);
+            //ctx.
+            //dbg!(&ctx.chapter_titles);
             let ctx = RenderItemContext {
                 handlebars: &handlebars,
                 destination: destination.to_path_buf(),
@@ -416,7 +450,11 @@ impl Renderer for HtmlHandlebars {
                 edition: ctx.config.rust.edition,
                 chapter_titles: &ctx.chapter_titles,
             };
-            self.render_item(item, ctx, &mut print_content)?;
+            let parsed_path = self.render_item(item, ctx, &mut print_content)?;
+            if !parsed_path.is_empty() {
+                fpm_ftd_file_str = format!("{}\n{}", fpm_ftd_file_str, parsed_path);
+            }
+            //dbg!(parsed_path);
             // Only the first non-draft chapter item should be treated as the "index"
             is_index &= !matches!(item, BookItem::Chapter(ch) if !ch.is_draft_chapter());
         }
@@ -433,8 +471,8 @@ impl Renderer for HtmlHandlebars {
         }
 
         debug!("Copy static files");
-        self.copy_static_files(destination)
-            .with_context(|| "Unable to copy across static files")?;
+        self.copy_static_files(destination, fpm_ftd_file_str)?;
+        //.with_context(|| "Unable to copy across static files")?;
 
         // Render search index
         #[cfg(feature = "search")]
@@ -584,7 +622,7 @@ fn remove_whitespaces(html: &str) -> String {
 fn insert_markdown_into_paragraph(content: &str) -> String {
     //dbg!(&content);
     format!(
-        r##"-- ds.markdown: 
+        r##"-- ds.markdown:
 
         {text}
         "##,

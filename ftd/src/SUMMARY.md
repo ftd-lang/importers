@@ -2,6 +2,10 @@
 
 [Introduction](README.md)
 
+# Manual
+
+- [Installation_manual](guide/installation_manual.md)
+
 # User Guide
 
 - [Installation](guide/installation.md)

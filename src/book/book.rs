@@ -46,8 +46,10 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
             if let Some(ref location) = link.location {
                 let filename = src_dir.join(location);
                 if !filename.exists() {
+                    //dbg!(&filename);
                     if let Some(parent) = filename.parent() {
                         if !parent.exists() {
+                            //dbg!(&parent);
                             fs::create_dir_all(parent)?;
                         }
                     }
@@ -59,11 +61,12 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
                     writeln!(f, "# {}", bracket_escape(&link.name))?;
                 }
             }
-
+            //if let name = &link.name {
+            //dbg!(name);
+            //}
             items.extend(&link.nested_items);
         }
     }
-
     Ok(())
 }
 

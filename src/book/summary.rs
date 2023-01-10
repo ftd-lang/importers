@@ -169,7 +169,10 @@ impl<'a> SummaryParser<'a> {
         let suffix_chapters = self
             .parse_affix(false)
             .with_context(|| "There was an error parsing the suffix chapters")?;
-
+        //dbg!(&title);
+        //dbg!(&prefix_chapters);
+        //dbg!(&numbered_chapters);
+        //dbg!(&suffix_chapters);
         Ok(Summary {
             title,
             prefix_chapters,
@@ -208,7 +211,7 @@ impl<'a> SummaryParser<'a> {
                 None => break,
             }
         }
-
+        //dbg!(&items);
         Ok(items)
     }
 
@@ -253,7 +256,7 @@ impl<'a> SummaryParser<'a> {
             }
             parts.extend(numbered_chapters);
         }
-
+        //dbg!(&parts);
         Ok(parts)
     }
 
@@ -268,7 +271,8 @@ impl<'a> SummaryParser<'a> {
         } else {
             Some(PathBuf::from(href))
         };
-
+        //dbg!(&name);
+        //dbg!(&path);
         Link {
             name,
             location: path,
@@ -398,7 +402,7 @@ impl<'a> SummaryParser<'a> {
                 None => break,
             }
         }
-
+        //dbg!(&items);
         Ok(items)
     }
 

@@ -1,0 +1,216 @@
+-- import: fpm
+
+
+
+-- ftd.column h0:
+caption title:
+optional body body:
+width: fill
+region: h0
+append-at: inner
+margin-top: 0
+margin-bottom: 32
+
+
+--- ftd.text:
+caption $title:
+region: title
+role: $fpm.type.heading-hero
+text: $title
+color: $fpm.color.main.text-strong
+padding-bottom: 16
+padding-top: 8
+$on-click$ if $open: toggle $open
+
+--- ftd.column:
+id: inner
+width: fill
+margin-bottom if $body is not null: -26
+
+--- markdown:
+if: $body is not null
+body: $body
+
+
+
+
+
+
+
+
+
+
+-- ftd.column h1:
+caption title:
+optional body body:
+append-at: inner
+width: fill
+region: h1
+margin-top: 32
+margin-bottom: 16
+
+--- ftd.row:
+width: fill
+spacing: 20
+
+--- ftd.text:
+caption $title:
+text: $title
+region: title
+role: $fpm.type.heading-large
+color: $fpm.color.main.text-strong
+padding-bottom: 16
+padding-top: 8
+
+--- container: ftd.main
+
+--- ftd.column:
+id: inner
+width: fill
+margin-bottom if $body is not null: -26
+
+--- markdown:
+if: $body is not null
+body: $body
+
+
+
+
+
+
+
+
+
+
+-- ftd.column h2:
+caption title:
+optional body body:
+width: fill
+region: h2
+append-at: inner
+margin-top: 32
+margin-bottom: 16
+
+--- ftd.text:
+caption $title:
+text: $title
+region: title
+role: $fpm.type.heading-medium
+color: $fpm.color.main.text-strong
+padding-bottom: 16
+padding-top: 8
+
+--- ftd.column:
+id: inner
+width: fill
+margin-bottom if $body is not null: -26
+
+--- markdown:
+if: $body is not null
+body: $body
+
+
+
+
+
+
+
+
+
+
+-- ftd.column h3:
+caption title:
+optional body body:
+width: fill
+region: h3
+append-at: inner
+margin-top: 32
+margin-bottom: 16
+
+--- ftd.text:
+caption $title:
+text: $title
+region: title
+role: $fpm.type.heading-small
+color: $fpm.color.main.text-strong
+padding-bottom: 16
+padding-top: 8
+
+--- ftd.column:
+id: inner
+width: fill
+margin-bottom if $body is not null: -26
+
+--- markdown:
+if: $body is not null
+body: $body
+
+
+
+
+
+
+
+
+
+
+-- ftd.text markdown:
+body body:
+optional boolean collapsed:
+optional caption title:
+optional boolean two_columns:
+text: $body
+role: $fpm.type.copy-relaxed
+color: $fpm.color.main.text
+margin-bottom: 26
+
+
+
+
+
+
+
+
+
+-- ftd.row key-value:
+caption key:
+optional string value:
+string default:
+margin-bottom: 10
+spacing: 2
+
+--- ftd.text: $key
+
+--- ftd.text: $value
+if: $value is not null
+
+--- ftd.text: $default
+if: $value is null
+
+
+
+
+
+
+
+
+
+
+-- ftd.column h2-text:
+caption title:
+optional body body:
+width: fill
+region: h2
+margin-top: 32
+margin-bottom: 16
+boolean open: true
+
+--- ftd.text:
+caption $title:
+text: $title
+region: title
+role: $fpm.type.heading-small
+color: $fpm.color.main.text
+padding-bottom: 8
+padding-top: 16
+$on-click$: toggle $open

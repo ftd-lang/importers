@@ -125,7 +125,7 @@ impl HtmlHandlebars {
             section_str = format!("{}{} ", section_str, "-");
         }
         if ctx.data.get("title").is_some() {
-            item_title = ctx.data.get("title").unwrap().to_string();
+            item_title = ctx.data.get("title").unwrap().to_string().replace("\"", "");
         }
 
         if ctx.data.get("path").is_some() {
@@ -133,12 +133,16 @@ impl HtmlHandlebars {
                     .get("path")
                     .unwrap()
                     .to_string()
-                    .replace(".md", "");
+                    .replace(".md", "").replace("\"", "");
+                    //dbg!(&item_path);
+                    //dbg!(&item_path.len());
         }
         let path_full_str=if section_str.is_empty() {
             format!("- {}: /{}/", item_title, item_path)
+            //format!(r##"- {item_title}: /{item_path}/"##)
         } else {
             format!("{}{}: /{}/", section_str, item_title, item_path)
+            //format!(r##"{section_str}{item_title}: /{item_path}/"##)
         };
 
         //dbg!(&path_full_str);
@@ -374,7 +378,7 @@ impl Renderer for HtmlHandlebars {
         let book = &ctx.book;
         let build_dir = ctx.root.join(&ctx.config.build.build_dir);
         let mut fpm_ftd_file_str = remove_whitespaces(
-            "-- import: fpm
+            r##"-- import: fpm
 
         -- fpm.package: wasif1024.github.io/fpm-site
         download-base-url: https://raw.githubusercontent.com/wasif1024/fpm-site/main
@@ -387,7 +391,7 @@ impl Renderer for HtmlHandlebars {
         
         # Home: /
         nav-title: Home
-        data: Section Data",
+        data: Section Data"##,
         );
         //dbg!(&book);
         if destination.exists() {
@@ -607,6 +611,13 @@ fn remove_whitespaces(html: &str) -> String {
         .replace_all(html.trim(), "$1")
         .into_owned()
 }
+/*fn remove_starting_quotes(html: &str) -> String {
+    static PARAGRAPH_ELEMENTS: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r#"^\"|\"$", ""#).unwrap());
+    PARAGRAPH_ELEMENTS
+        .replace_all(html.trim(), "$1")
+        .into_owned()
+}*/
 /// Insert a sinle link into a header, making sure each link gets its own
 /// unique ID by appending an auto-incremented number (if necessary).
 /*fn insert_link_into_header(

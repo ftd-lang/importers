@@ -1,0 +1,46 @@
+-- import: fpm
+
+-- fpm.package: wasif1024.github.io/fpm-site
+download-base-url: https://raw.githubusercontent.com/wasif1024/fpm-site/main
+
+-- fpm.dependency: fifthtry.github.io/doc-site as ds
+
+-- fpm.auto-import: ds
+
+-- fpm.sitemap:
+
+# Home: /
+nav-title: Home
+data: Section Data
+- Introduction: /index/
+- Installation_manual: /guide/installation_manual/
+- Installation: /guide/installation/
+- Reading Books: /guide/reading/
+- Creating a Book: /guide/creating/
+- Command Line Tool: /cli/index/
+ - init: /cli/init/
+ - build: /cli/build/
+ - watch: /cli/watch/
+ - serve: /cli/serve/
+ - test: /cli/test/
+ - clean: /cli/clean/
+ - completions: /cli/completions/
+- Format: /format/index/
+ - SUMMARY.md: /format/summary/
+ - Configuration: /format/configuration/index/
+  - General: /format/configuration/general/
+  - Preprocessors: /format/configuration/preprocessors/
+  - Renderers: /format/configuration/renderers/
+  - Environment Variables: /format/configuration/environment-variables/
+ - Theme: /format/theme/index/
+  - index.hbs: /format/theme/index-hbs/
+  - Syntax highlighting: /format/theme/syntax-highlighting/
+  - Editor: /format/theme/editor/
+ - MathJax Support: /format/mathjax/
+ - mdBook-specific features: /format/mdbook/
+ - Markdown: /format/markdown/
+- Continuous Integration: /continuous-integration/
+- For Developers: /for_developers/index/
+ - Preprocessors: /for_developers/preprocessors/
+ - Alternative Backends: /for_developers/backends/
+- Contributors: /misc/contributors/

@@ -1,0 +1,257 @@
+-- import: fpm
+-- import: fifthtry.github.io/package-doc/typography as tf
+-- import: fifthtry.github.io/package-doc/code-block as cb
+-- import: fifthtry.github.io/package-doc/assets
+
+
+
+-- ftd.column hidden-code:
+caption title:
+boolean open-block: false
+body body:
+spacing: 10
+$on-click$: toggle $open-block
+width: fill
+border-left: 5
+border-color: $fpm.color.main.border
+padding: 10
+
+--- ftd.text: $title
+role: $fpm.type.copy-large
+color: $fpm.color.main.text
+
+--- ftd.text: Show code
+if: not $open-block
+role: $fpm.type.fine-print
+color: $fpm.color.main.text-strong
+
+--- ftd.text: Hide code
+if: $open-block
+role: $fpm.type.fine-print
+color: $fpm.color.main.text-strong
+
+--- ftd.column:
+if: $open-block
+width: fill
+$on-click$: toggle $open-block
+
+--- cb.code:
+lang: ftd
+
+$body
+
+
+
+
+
+
+
+
+
+
+-- ftd.column output:
+caption caption:
+body body:
+optional ftd.image-src reference:
+optional string reference-width:
+width: fill
+open: true
+append-at: output-container
+boolean reference-open: false
+padding-left: 20
+border-left: 5
+border-color: $fpm.color.main.border
+margin-top: 30
+margin-bottom: 20
+padding-bottom: 10
+
+--- tf.h2-text: $caption
+
+--- cb.code:
+lang: ftd
+
+$body
+
+--- ftd.text: Output
+color: $fpm.color.main.text
+background-color: $fpm.color.main.background.base
+border-top-radius: 2
+padding-vertical: 10
+padding-horizontal: 20
+role: $fpm.type.copy-large
+$on-click$: toggle $reference-open
+
+--- ftd.column:
+width: fill
+background-color: $fpm.color.main.background.base
+border-radius: 2
+border-width: 1
+border-color: $fpm.color.main.border
+
+--- ftd.image:
+if: $reference-open
+src: $reference
+if: $reference is not null
+width: $reference-width
+padding-bottom: 20
+padding-vertical: 30
+padding-horizontal: 20
+margin-bottom: 10
+
+--- ftd.column:
+width: fill
+id: output-container
+padding-vertical: 30
+padding-horizontal: 20
+
+
+
+
+
+
+
+
+
+
+-- ftd.column attribute:
+caption title:
+string name:
+body body:
+width: fill
+
+--- tf.h3: $title
+
+--- kv: Attribute Name
+value: $name
+
+--- tf.markdown:
+
+$body
+
+
+
+
+
+
+
+
+
+
+-- ftd.column component:
+caption title:
+string name:
+body body:
+width: fill
+
+--- tf.h2-text: $title
+
+--- kv: Component Name: 
+value: $name
+
+--- tf.markdown:
+
+$body
+
+
+
+
+
+
+
+
+
+
+-- ftd.column package:
+caption title:
+string name:
+body body:
+width: fill
+color: $fpm.color.main.text
+spacing: 20
+open: true
+
+--- ftd.row:
+anchor: window
+right: 50
+bottom: 100
+padding: 10
+background-color: $fpm.color.main.background.base
+border-width: 1
+border-color: $fpm.color.main.border
+border-radius: 4
+z-index: 99999999999999
+
+--- toggle:
+
+--- container: ftd.main
+
+--- ftd.row:
+width: fill
+
+--- ftd.image:
+src: $assets.files.static.ftd-logo.png
+margin-right: 28
+height: 64
+
+--- tf.h0: $title
+align: center
+
+--- container: ftd.main
+
+--- kv: Package Name: 
+value: $name
+
+--- tf.markdown:
+
+$body
+
+
+
+
+
+
+
+
+
+
+-- ftd.row kv:
+caption title:
+string value:
+padding: 10
+border-width: 1
+border-color: $fpm.color.main.border
+spacing: 7
+width: fill
+background-color: $fpm.color.main.background.base
+border-radius: 4
+margin-bottom: 15
+
+--- ftd.text: $title
+role: $fpm.type.copy-relaxed
+
+--- ftd.text: $value
+color: $fpm.color.main.text
+role: $fpm.type.copy-relaxed
+
+
+
+
+
+
+
+
+-- ftd.row toggle:
+
+--- ftd.image:
+if: not $ftd.dark-mode
+src: $assets.files.static.switch-mode-icon.svg
+height: 18
+$on-click$: message-host enable-dark-mode
+align: center
+
+--- ftd.image:
+if:  $ftd.dark-mode
+src: $assets.files.static.switch-mode-icon-dark.svg
+height: 18
+$on-click$: message-host enable-light-mode
+align: center

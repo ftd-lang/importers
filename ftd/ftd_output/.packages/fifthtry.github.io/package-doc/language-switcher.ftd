@@ -1,0 +1,464 @@
+-- import: fpm
+-- import: fifthtry.github.io/package-doc/doc as pd
+-- import: fifthtry.github.io/package-doc/assets
+
+-- boolean is-mobile: false
+
+-- is-mobile: true
+if: $ftd.device == mobile
+
+
+
+-- ftd.column:
+padding-horizontal: 50
+padding-vertical: 20
+width: fill
+background-color: $fpm.color.main.background.base
+
+
+-- pd.package: Language Switcher
+name: fifthtry.github.io/language-switcher
+
+This component can be used as a site language switcher.
+
+
+-- pd.component: Language Switcher
+name: fifthtry.github.io/language-switcher.switcher
+
+This is the main language switcher.
+
+
+
+-- pd.hidden-code: toc definitions
+
+
+\-- fpm.toc-item list languages:
+$processor$: toc
+
+- English: /
+- Hindi: /hi
+- Spanish: /es
+- German: /de
+
+
+
+
+-- pd.output: Basic usage example
+reference: $assets.files.static.lang-switcher-icons.language-switcher-light.png
+reference-width: 200
+
+\-- switcher:
+languages: $languages
+current: English
+switcher-text: EN
+text-color: $fpm.color.main.background.base
+horizontal-position: -30
+
+
+
+--- switcher:
+languages: $languages
+current: English
+switcher-text: EN
+text-color: $fpm.color.main.background.base
+horizontal-position: -30
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- fpm.toc-item list languages:
+$processor$: toc
+
+- English: /
+- Hindi: /hi
+- Spanish: /es
+- German: /de
+
+
+
+
+
+
+
+
+	
+
+-- ftd.column switcher:
+boolean open: false
+fpm.toc-item list languages: $fpm.language-toc
+optional string current: $fpm.language
+optional intger vertical-position: 8
+optional integer horizontal-position: 0
+ftd.image-src light-radio-default: $assets.files.static.lang-switcher-icons.radio-default.png
+ftd.image-src light-radio-active: $assets.files.static.lang-switcher-icons.radio-active.png
+ftd.image-src light-polygon-up: $assets.files.static.lang-switcher-icons.polygon-up.png
+ftd.image-src light-polygon-down: $assets.files.static.lang-switcher-icons.polygon-down.png
+ftd.image-src light-lang-icon: $assets.files.static.lang-switcher-icons.lang-icon.png
+string font: Roboto
+integer size: 14
+if: $languages is not empty
+z-index: 99999
+optional string switcher-text: $fpm.language
+width if $is-mobile: fill
+$on-click$: toggle $open
+$on-click-outside$: $open = false
+ftd.color background: $fpm.color.main.background.base
+ftd.color text-color: $fpm.color.main.text
+ftd.color menu-border: $fpm.color.main.text
+ftd.color menu-hover-color: $fpm.color.main.text
+ftd.color current-lang-color: $fpm.color.main.text
+ftd.color footer-lang-color: $fpm.color.main.text
+
+--- ftd.column:
+spacing: 4
+
+--- ftd.image: 
+src: $light-lang-icon
+anchor: parent
+right: -27
+top: -1
+
+--- ftd.row:
+if: not $ftd.dark-mode
+
+--- ftd.image:
+src: $light-polygon-down
+anchor: parent
+right: -30
+bottom: -18
+
+--- container: ftd.main
+
+--- ftd.text: $switcher-text
+if: $switcher-text is not null
+role: $fpm.type.label-big
+padding-right: 5
+color: $text-color
+
+--- ftd.column:
+if: not $is-mobile
+margin-top: 0
+
+--- ftd.column:
+if: $open
+anchor: parent
+right: -30
+bottom: -8
+
+--- ftd.image:
+src: $light-polygon-up
+
+--- container: ftd.main
+
+--- ftd.column:
+if: $is-mobile
+width: fill
+
+--- ftd.column:
+if: not $open
+anchor: parent
+right: 30
+bottom: 8
+
+--- ftd.image:
+src: $assets.files.static.lang-switcher-icons.mobile-menu-arrw-right.png
+
+--- container: ftd.main
+
+--- ftd.column:
+if: $is-mobile
+width: fill
+
+--- ftd.column:
+if: $open
+anchor: parent
+right: 30
+top: -25
+
+--- ftd.image:
+src: $assets.files.static.lang-switcher-icons.mobile-menu-arrw-up.png
+
+--- container: ftd.main
+
+--- ftd.column:
+if: not $is-mobile
+
+--- ftd.column:
+if: $open
+background-color: $background
+border-width: 1
+border-color: $menu-border
+width: 180
+border-radius: 6
+anchor: parent
+top: $vertical-position
+left: $horizontal-position
+shadow-offset-x: 3
+shadow-offset-y: 3
+shadow-size: 1
+shadow-blur: 5
+/shadow-color: rgba (0, 0, 0, 0.25)
+
+--- active: $current
+light-radio-active: $light-radio-active
+url: /
+current-lang-color: $current-lang-color
+
+--- lang-list-desktop: $o.title
+if: not $is-mobile
+$loop$: $languages as $o
+url: $o.url
+light-radio-default: $light-radio-default
+light-radio-active: $light-radio-active
+text-color: $text-color
+menu-hover-color: $menu-hover-color
+
+--- footer: Translation Status
+link: $fpm.translation-status-url
+font: $font
+size: $size
+footer-lang-color: $footer-lang-color
+
+--- container: ftd.main
+
+--- ftd.column:
+if: $is-mobile
+
+--- ftd.column:
+if: $open
+width: 180
+
+--- active: $current
+light-radio-active: $light-radio-active
+url: /
+current-lang-color: $current-lang-color
+
+--- lang-list-desktop: $o.title
+if: not $is-mobile
+$loop$: $languages as $o
+url: $o.url
+light-radio-default: $light-radio-default
+light-radio-active: $light-radio-active
+text-color: $text-color
+menu-hover-color: $menu-hover-color
+
+--- lang-list-mobile: $o.title
+if: $is-mobile
+$loop$: $languages as $o
+url: $o.url
+text-color: $text-color
+menu-hover-color: $menu-hover-color
+
+--- footer: Translation Status
+link: $fpm.translation-status-url
+font: $font
+size: $size
+footer-lang-color: $footer-lang-color
+
+
+
+
+
+
+
+
+
+
+
+-- ftd.row lang-list-desktop:
+spacing: 5 
+caption text: 
+string url:
+ftd.image-src light-radio-default: 
+ftd.image-src light-radio-active: 
+ftd.color menu-hover-color:
+ftd.color text-color:
+width: fill
+padding-horizontal: 10
+padding-vertical: 8
+boolean showactive: false
+$on-mouse-enter$: $showactive = true
+$on-mouse-leave$: $showactive = false
+
+--- ftd.row:
+if: not $showactive
+
+--- ftd.image:
+src: $light-radio-default
+padding-right: 10
+
+--- ftd.text: $text
+width: fill
+link: $url
+role: $fpm.type.label-big
+color: $text-color
+
+--- container: ftd.main
+
+--- ftd.row:
+if: $showactive
+
+--- ftd.image:
+src: $light-radio-active
+padding-right: 10
+
+
+--- ftd.text: $text
+width: fill
+link: $url
+role: $fpm.type.label-big
+color: $menu-hover-color
+
+
+
+
+
+
+
+
+
+
+-- ftd.row lang-list-mobile:
+spacing: 5 
+caption text: 
+string url:
+ftd.color text-color:
+ftd.color menu-hover-color:
+width: fill
+padding-horizontal: 10
+padding-vertical: 8
+boolean showactive: false
+$on-mouse-enter$: $showactive = true
+$on-mouse-leave$: $showactive = false
+
+--- ftd.row:
+if: not $showactive
+
+--- ftd.text: $text
+width: fill
+link: $url
+role: $fpm.type.label-big
+color: $text-color
+
+--- container: ftd.main
+
+--- ftd.row:
+if: $showactive
+
+--- ftd.text: $text
+width: fill
+link: $url
+color: $menu-hover-color
+role: $fpm.type.label-big
+
+
+
+
+
+
+
+
+
+
+-- ftd.row active: 
+caption text: 
+string url:
+ftd.color current-lang-color:
+width: fill
+padding-vertical: 10
+padding-bottom: 0
+padding-horizontal: 15
+padding-horizontal if $is-mobile: 10
+ftd.image-src light-radio-active:
+margin-bottom: 5
+
+
+--- ftd.row:
+if: not $is-mobile
+width: fill
+border-bottom: 1
+border-bottom if $is-mobile: 0
+border-color: $fpm.color.main.text
+padding-bottom: 10
+
+
+--- ftd.image:
+src: $light-radio-active
+padding-right: 10
+
+
+--- ftd.text: $text
+width: fill
+link: $url
+role: $fpm.type.label-big
+color: $current-lang-color
+
+--- container: ftd.main
+
+--- ftd.row:
+if: $is-mobile
+width: fill
+border-bottom: 1
+border-bottom if $is-mobile: 0
+border-color: $fpm.color.main.text
+padding-bottom: 10
+
+
+--- ftd.text: $text
+if: $is-mobile
+width: fill
+link: $url
+role: $fpm.type.label-big
+color: $current-lang-color
+
+
+
+
+
+
+
+
+
+-- ftd.row footer:
+caption footer:
+string link:
+string font:
+integer size:
+ftd.color footer-lang-color:
+width: fill
+padding-vertical: 10
+padding-top: 0
+padding-horizontal: 15
+padding-horizontal if $is-mobile: 10
+
+--- ftd.row:
+width: fill
+border-top: 1
+border-top if $is-mobile: 0
+border-color: $fpm.color.main.text
+padding-top: 10
+
+--- ftd.text: $footer
+width: fill
+role: $fpm.type.label-big
+link: $link
+color: $footer-lang-color
+
+

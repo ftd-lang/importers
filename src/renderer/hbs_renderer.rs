@@ -111,7 +111,8 @@ impl HtmlHandlebars {
         //debug!("Render template");
         let rendered = ctx.handlebars.render("index", &ctx.data)?;
         if ctx.data.get("section").is_some() {
-            let total_dots = &ctx
+            let mut total_dots = 1;
+            let menu_level = &ctx
                 .data
                 .get("section")
                 .unwrap()
@@ -119,9 +120,26 @@ impl HtmlHandlebars {
                 .split('.')
                 .count()
                 - 1;
-            for _x in 0..total_dots - 1 {
-                section_str = format!("{} {}", section_str, "");
+
+            //dbg!(ctx.data.get("title"));
+            //dbg!(ctx.data.get("section"));
+            //dbg!(&total_dots);
+            if menu_level == 1 {
+                total_dots = 1;
+            } else if menu_level == 2 {
+                total_dots = 2;
+            } else if menu_level == 3 {
+                total_dots = 4;
+            } else if menu_level == 4 {
+                total_dots = 6;
+            } else if menu_level == 5 {
+                total_dots = 8;
             }
+            if menu_level > 1 {
+            for _x in 0..total_dots {
+                section_str = format!("{} {}", section_str, "");
+                //dbg!(&x);
+            }}
             section_str = format!("{}{} ", section_str, "-");
         }
         if ctx.data.get("title").is_some() {
@@ -129,15 +147,17 @@ impl HtmlHandlebars {
         }
 
         if ctx.data.get("path").is_some() {
-            item_path = ctx.data
-                    .get("path")
-                    .unwrap()
-                    .to_string()
-                    .replace(".md", "").replace("\"", "");
-                    //dbg!(&item_path);
-                    //dbg!(&item_path.len());
+            item_path = ctx
+                .data
+                .get("path")
+                .unwrap()
+                .to_string()
+                .replace(".md", "")
+                .replace("\"", "");
+            //dbg!(&item_path);
+            //dbg!(&item_path.len());
         }
-        let path_full_str=if section_str.is_empty() {
+        let path_full_str = if section_str.is_empty() {
             format!("- {}: /{}/", item_title, item_path)
             //format!(r##"- {item_title}: /{item_path}/"##)
         } else {

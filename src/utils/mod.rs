@@ -6,13 +6,41 @@ pub(crate) mod toml_ext;
 use crate::errors::Error;
 use log::error;
 use once_cell::sync::Lazy;
-use pulldown_cmark::{CodeBlockKind, CowStr, Event, Options, Parser, Tag};
+use pulldown_cmark::{CodeBlockKind, CowStr, Event, LinkType, Options, Parser, Tag};
 use regex::Regex;
 
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt::Write;
 use std::path::Path;
+pub(crate) enum MarkDownEvents {
+    Heading,
+    Paragraph,
+    Link,
+}
+impl MarkDownEvents {
+    /*const EVENTS_ITER: [MarkDownEvents; 3] = [
+        MarkDownEvents::Heading,
+        MarkDownEvents::Paragraph,
+        MarkDownEvents::Link,
+    ];*/
+    pub(crate) fn as_str(&self) -> &'static str {
+        match self {
+            MarkDownEvents::Heading => "heading",
+            MarkDownEvents::Paragraph => "paragraph",
+            MarkDownEvents::Link => "link",
+        }
+    }
+
+    /*pub(crate) fn from_str(s: &str) -> Self {
+        match s {
+            "heading" => MarkDownEvents::Heading,
+            "paragraph" => MarkDownEvents::Paragraph,
+            "link" => MarkDownEvents::Link,
+            _ => panic!("Invalid Markdown Events {}", s),
+        }
+    }*/
+}
 
 pub use self::string::{
     take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
@@ -127,17 +155,19 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
             }
 
             if let Some(caps) = MD_LINK.captures(&dest) {
-                //dbg!("came here");
+                //dbg!(&caps);
                 fixed_link.push_str(&caps["link"]);
-                fixed_link.push_str(".ftd");
+                //fixed_link.push_str(".ftd");
                 if let Some(anchor) = caps.name("anchor") {
                     fixed_link.push_str(anchor.as_str());
                 }
             } else {
                 fixed_link.push_str(&dest);
             };
+            //dbg!(&fixed_link);
             return CowStr::from(fixed_link);
         }
+
         dest
     }
 
@@ -198,6 +228,7 @@ pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&P
     let p = new_cmark_parser(text, curly_quotes);
     let mut parsed_str: String;
     let mut current_tag: String = String::from("");
+    let mut tag_started: bool = false;
     /*for obj in p{
         dbg!(obj);
     }*/
@@ -209,77 +240,150 @@ pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&P
 
             a.into_iter().chain(b)
         });
+    let mut tag_parsed_string = "".to_string();
     for event in events {
-        (parsed_str, current_tag) = render_to_docsite(event, current_tag);
-        rendered_docsite = format!("{}{}", rendered_docsite, parsed_str);
-        //dbg!(event);
+        (parsed_str, current_tag, tag_started) = render_to_docsite(event, current_tag, tag_started);
+
+        if !tag_started {
+            if current_tag == MarkDownEvents::Link.as_str() {
+                tag_parsed_string = format!("{}{}", parsed_str, tag_parsed_string);
+                rendered_docsite = format!("{}{}", rendered_docsite, tag_parsed_string);
+            } else {
+                tag_parsed_string = format!("{}{}", tag_parsed_string, parsed_str);
+                rendered_docsite = format!("{}{}", rendered_docsite, tag_parsed_string);
+            }
+            tag_parsed_string = "".to_string();
+        } else {
+            tag_parsed_string = parsed_str;
+        }
     }
 
     rendered_docsite
 }
-pub fn render_to_docsite(event: Event, mut current_tag: String) -> (String, String) {
+pub fn render_to_docsite(
+    event: Event,
+    mut current_tag: String,
+    mut tag_started: bool,
+) -> (String, String, bool) {
     let mut result_str = String::from("");
     //let mut tag_type = String::from("heading");
+    //dbg!(&event);
     match &event {
         Event::Start(tag) => match tag {
             Tag::Heading(heading_level, _fragment_identifier, _class_list) => {
-                current_tag = "heading".to_string();
-                result_str = format!(r##"-- ds.{heading_level}: "##);
+                tag_started = true;
+                current_tag = MarkDownEvents::Heading.as_str().to_string();
+                result_str = format!(r##"
+                -- ds.{heading_level}: "##);
             }
             Tag::Paragraph => {
-                current_tag = "paragrapgh".to_string();
+                tag_started = true;
+                current_tag = MarkDownEvents::Paragraph.as_str().to_string();
                 result_str = r##"-- ds.markdown: "##.to_string();
             }
-            Tag::Link(link_type, url, title) => println!(
-                "Link link_type: {:?} url: {} title: {}",
-                link_type, url, title
-            ),
-            Tag::List(ordered_list_first_item_number) => println!(
-                "List ordered_list_first_item_number: {:?}",
-                ordered_list_first_item_number
-            ),
-            Tag::Item => println!("Item (this is a list item)"),
-            Tag::Emphasis => println!("Emphasis (this is a span tag)"),
-            Tag::Strong => println!("Strong (this is a span tag)"),
-            Tag::Strikethrough => println!("Strikethrough (this is a span tag)"),
-            Tag::BlockQuote => println!("BlockQuote"),
+            Tag::Link(link_type, url, _title) => {
+                tag_started = true;
+                if *link_type == LinkType::Inline {
+                    current_tag = MarkDownEvents::Link.as_str().to_string();
+                    let parsed_url = url.to_string().replace(".ftd", "");
+                    result_str = format!(
+                        r##"(/{parsed_url}/)"##
+                    );
+                }
+            }
+            Tag::List(ordered_list_first_item_number) => {
+                tag_started = true;
+                println!(
+                    "List ordered_list_first_item_number: {:?}",
+                    ordered_list_first_item_number
+                )
+            }
+            Tag::Item => {
+                tag_started = true;
+                println!("Item (this is a list item)")
+            }
+            Tag::Emphasis => {
+                tag_started = true;
+                println!("Emphasis (this is a span tag)")
+            }
+            Tag::Strong => {
+                tag_started = true;
+                println!("Strong (this is a span tag)")
+            }
+            Tag::Strikethrough => {
+                tag_started = true;
+                println!("Strikethrough (this is a span tag)")
+            }
+            Tag::BlockQuote => {
+                tag_started = true;
+                println!("BlockQuote")
+            }
             Tag::CodeBlock(code_block_kind) => {
+                tag_started = true;
                 println!("CodeBlock code_block_kind: {:?}", code_block_kind)
             }
-            Tag::Image(link_type, url, title) => println!(
-                "Image link_type: {:?} url: {} title: {}",
-                link_type, url, title
-            ),
-            Tag::Table(column_text_alignment_list) => println!(
-                "Table column_text_alignment_list: {:?}",
-                column_text_alignment_list
-            ),
-            Tag::TableHead => println!("TableHead (contains TableRow tags"),
-            Tag::TableRow => println!("TableRow (contains TableCell tags)"),
-            Tag::TableCell => println!("TableCell (contains inline tags)"),
-            Tag::FootnoteDefinition(label) => println!("FootnoteDefinition label: {}", label),
+            Tag::Image(link_type, url, title) => {
+                tag_started = true;
+                println!(
+                    "Image link_type: {:?} url: {} title: {}",
+                    link_type, url, title
+                )
+            }
+            Tag::Table(column_text_alignment_list) => {
+                tag_started = true;
+                println!(
+                    "Table column_text_alignment_list: {:?}",
+                    column_text_alignment_list
+                )
+            }
+            Tag::TableHead => {
+                tag_started = true;
+                println!("TableHead (contains TableRow tags")
+            }
+            Tag::TableRow => {
+                tag_started = true;
+                println!("TableRow (contains TableCell tags)")
+            }
+            Tag::TableCell => {
+                tag_started = true;
+                println!("TableCell (contains inline tags)")
+            }
+            Tag::FootnoteDefinition(label) => {
+                tag_started = true;
+                println!("FootnoteDefinition label: {}", label)
+            }
         },
         Event::Text(s) => {
-            if current_tag == *"heading" {
+            tag_started = false;
+            if current_tag == *MarkDownEvents::Heading.as_str().to_string() {
                 result_str = format!(
                     r##" {s}
                 "##,
                 );
-            } else {
+            } else if current_tag == *MarkDownEvents::Link.as_str().to_string() {
+                result_str = format!(
+                    r##"[{s}]"##,
+                );
+            } else if current_tag == *MarkDownEvents::Paragraph.as_str().to_string() {
                 result_str = format!(
                     r##"
 
                 {s}
                 "##,
                 );
+            } else {
+                result_str = "".to_string();
             }
 
             //println!("Text: {:?}", s.trim())
         }
         Event::SoftBreak => println!("SoftBreak"),
         Event::HardBreak => println!("HardBreak"),
-        /*Event::End(tag) => println!("End: {:?}", tag),
-        Event::Html(s) => println!("Html: {:?}", s),
+        Event::End(tag) => {
+            tag_started = false;
+            println!("End: {:?}", tag)
+        }
+        /*Event::Html(s) => println!("Html: {:?}", s),
         Event::Text(s) => println!("Text: {:?}", s),
         Event::Code(s) => println!("Code: {:?}", s),
         Event::FootnoteReference(s) => println!("FootnoteReference: {:?}", s),
@@ -289,7 +393,7 @@ pub fn render_to_docsite(event: Event, mut current_tag: String) -> (String, Stri
         _ => {}
     }
     //String::from("yes")
-    (result_str, current_tag)
+    (result_str, current_tag, tag_started)
 }
 /// Wraps tables in a `.table-wrapper` class to apply overflow-x rules to.
 fn wrap_tables(event: Event<'_>) -> (Option<Event<'_>>, Option<Event<'_>>) {

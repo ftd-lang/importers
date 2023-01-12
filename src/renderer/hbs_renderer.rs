@@ -136,14 +136,15 @@ impl HtmlHandlebars {
                 total_dots = 8;
             }
             if menu_level > 1 {
-            for _x in 0..total_dots {
-                section_str = format!("{} {}", section_str, "");
-                //dbg!(&x);
-            }}
+                for _x in 0..total_dots {
+                    section_str = format!("{} {}", section_str, "");
+                    //dbg!(&x);
+                }
+            }
             section_str = format!("{}{} ", section_str, "-");
         }
         if ctx.data.get("title").is_some() {
-            item_title = ctx.data.get("title").unwrap().to_string().replace("\"", "");
+            item_title = ctx.data.get("title").unwrap().to_string().replace('\"', "");
         }
 
         if ctx.data.get("path").is_some() {
@@ -153,7 +154,7 @@ impl HtmlHandlebars {
                 .unwrap()
                 .to_string()
                 .replace(".md", "")
-                .replace("\"", "");
+                .replace('\"', "");
             //dbg!(&item_path);
             //dbg!(&item_path.len());
         }
@@ -631,37 +632,7 @@ fn remove_whitespaces(html: &str) -> String {
         .replace_all(html.trim(), "$1")
         .into_owned()
 }
-/*fn remove_starting_quotes(html: &str) -> String {
-    static PARAGRAPH_ELEMENTS: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r#"^\"|\"$", ""#).unwrap());
-    PARAGRAPH_ELEMENTS
-        .replace_all(html.trim(), "$1")
-        .into_owned()
-}*/
-/// Insert a sinle link into a header, making sure each link gets its own
-/// unique ID by appending an auto-incremented number (if necessary).
-/*fn insert_link_into_header(
-    level: usize,
-    content: &str,
-    id_counter: &mut HashMap<String, usize>,
-) -> String {
-    //dbg!(&content);
-    let id = utils::unique_id_from_content(content, id_counter);
 
-    format!(r##"-- ds.h{level}: {id}"##, level = level, id = id,)
-}
-fn insert_markdown_into_paragraph(content: &str) -> String {
-    //dbg!(&content);
-    format!(
-        r##"-- ds.markdown:
-
-        {text}
-        "##,
-        text = content
-    )
-}*/
-
-// ```
 // This function replaces all commas by spaces in the code block classes
 fn fix_code_blocks(html: &str) -> String {
     static FIX_CODE_BLOCKS: Lazy<Regex> =

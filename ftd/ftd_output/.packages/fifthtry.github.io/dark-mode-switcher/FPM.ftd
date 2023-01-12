@@ -1,0 +1,8 @@
+-- import: fpm
+
+-- fpm.package: fifthtry.github.io/dark-mode-switcher
+zip: github.com/fifthtry/dark-mode-switcher/archive/refs/heads/main.zip
+download-base-url: https://raw.githubusercontent.com/fifthtry/dark-mode-switcher/main
+
+-- fpm.dependency: fifthtry.github.io/package-doc
+-- fpm.dependency: fifthtry.github.io/inter

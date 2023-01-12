@@ -1,13 +1,20 @@
-# Introduction
+-- import: fpm
 
-## Sub Heading
+-- ds.page: Introduction
+
+
+-- ds.h1: Introduction
+
+-- ds.h2: Sub Heading
+-- ds.markdown:
 
 test paragraph
 
-[test link](guide/installation_manual.md)
-
-### Heading 3
+[test link](/guide/installation_manual/)
+-- ds.h3: Heading 3
+-- ds.markdown:
 
 FTD is created with the goal to make programming accessible to more people. FTD compiles to HTML/CSS/JS and is used to create web pages. FTD is designed with authoring web content in mind, it can be seen as markdown with data types, event handling, APIs integrations etc.
+-- ds.markdown:
 
 Second Paragraph for

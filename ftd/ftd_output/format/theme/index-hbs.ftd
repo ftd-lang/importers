@@ -1,6 +1,0 @@
--- import: fpm
-
--- ds.page: index.hbs
-
-
--- ds.h1: index.hbs

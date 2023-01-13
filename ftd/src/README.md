@@ -1,13 +1,9 @@
 # Introduction
 
-## Sub Heading
-
-test paragraph
-
-[test link](guide/installation_manual.md)
-
 ### Heading 3
 
+## Image
+![The San Juan Mountains are beautiful!](/assets/san-juan-mountains.jpg)
 FTD is created with the goal to make programming accessible to more people. FTD compiles to HTML/CSS/JS and is used to create web pages. FTD is designed with authoring web content in mind, it can be seen as markdown with data types, event handling, APIs integrations etc.
 
 Second Paragraph for

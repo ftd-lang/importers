@@ -157,7 +157,7 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
             if let Some(caps) = MD_LINK.captures(&dest) {
                 //dbg!(&caps);
                 fixed_link.push_str(&caps["link"]);
-                //fixed_link.push_str(".ftd");
+                fixed_link.push_str(".ftd");
                 if let Some(anchor) = caps.name("anchor") {
                     fixed_link.push_str(anchor.as_str());
                 }
@@ -273,8 +273,10 @@ pub fn render_to_docsite(
             Tag::Heading(heading_level, _fragment_identifier, _class_list) => {
                 tag_started = true;
                 current_tag = MarkDownEvents::Heading.as_str().to_string();
-                result_str = format!(r##"
-                -- ds.{heading_level}: "##);
+                result_str = format!(
+                    r##"
+                -- ds.{heading_level}: "##
+                );
             }
             Tag::Paragraph => {
                 tag_started = true;
@@ -286,9 +288,7 @@ pub fn render_to_docsite(
                 if *link_type == LinkType::Inline {
                     current_tag = MarkDownEvents::Link.as_str().to_string();
                     let parsed_url = url.to_string().replace(".ftd", "");
-                    result_str = format!(
-                        r##"(/{parsed_url}/)"##
-                    );
+                    result_str = format!(r##"(/{parsed_url}/)"##);
                 }
             }
             Tag::List(ordered_list_first_item_number) => {
@@ -322,12 +322,14 @@ pub fn render_to_docsite(
                 tag_started = true;
                 println!("CodeBlock code_block_kind: {:?}", code_block_kind)
             }
-            Tag::Image(link_type, url, title) => {
+            Tag::Image(_link_type, url, _title) => {
                 tag_started = true;
-                println!(
-                    "Image link_type: {:?} url: {} title: {}",
-                    link_type, url, title
-                )
+                let image_url = url.replace('/', ".");
+                result_str = format!(
+                    r##"-- ds.image: 
+                src: $assets.files{image_url}
+                align: center"##
+                );
             }
             Tag::Table(column_text_alignment_list) => {
                 tag_started = true;
@@ -361,9 +363,7 @@ pub fn render_to_docsite(
                 "##,
                 );
             } else if current_tag == *MarkDownEvents::Link.as_str().to_string() {
-                result_str = format!(
-                    r##"[{s}]"##,
-                );
+                result_str = format!(r##"[{s}]"##,);
             } else if current_tag == *MarkDownEvents::Paragraph.as_str().to_string() {
                 result_str = format!(
                     r##"
@@ -383,9 +383,12 @@ pub fn render_to_docsite(
             tag_started = false;
             println!("End: {:?}", tag)
         }
+        Event::Code(s) => {
+            println!("Code: {:?}", s)
+        }
         /*Event::Html(s) => println!("Html: {:?}", s),
         Event::Text(s) => println!("Text: {:?}", s),
-        Event::Code(s) => println!("Code: {:?}", s),
+
         Event::FootnoteReference(s) => println!("FootnoteReference: {:?}", s),
         Event::TaskListMarker(b) => println!("TaskListMarker: {:?}", b),
 

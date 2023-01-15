@@ -2,7 +2,7 @@
 mod book;
 mod summary;
 
-pub use self::book::{load_book, Book, BookItem, BookItems, Chapter};
+pub use self::book::{load_makrdown_files, Book, BookItem, BookItems, Chapter};
 pub use self::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 
 use log::{debug, info, log_enabled, trace, warn};
@@ -62,7 +62,7 @@ impl MDBook {
         let root = book_root.into();
 
         let src_dir = root.join(&config.book.src);
-        let book = book::load_book(&src_dir, &config.build)?;
+        let book = book::load_makrdown_files(&src_dir, &config.build)?;
 
         let renderers = determine_renderers(&config);
         let preprocessors = determine_preprocessors(&config)?;
@@ -85,7 +85,7 @@ impl MDBook {
         let root = book_root.into();
 
         let src_dir = root.join(&config.book.src);
-        let book = book::load_book_from_disk(&summary, &src_dir)?;
+        let book = book::load_makrdown_files_from_disk(&summary, &src_dir)?;
 
         let renderers = determine_renderers(&config);
         let preprocessors = determine_preprocessors(&config)?;

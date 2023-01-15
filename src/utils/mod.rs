@@ -246,14 +246,19 @@ pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&P
 
         if !tag_started {
             if current_tag == MarkDownEvents::Link.as_str() {
-                tag_parsed_string = format!("{}{}", parsed_str, tag_parsed_string);
+                tag_parsed_string = format!("{}{}\n", parsed_str, tag_parsed_string);
                 rendered_docsite = format!("{}{}", rendered_docsite, tag_parsed_string);
-            } else {
-                tag_parsed_string = format!("{}{}", tag_parsed_string, parsed_str);
+            } else if current_tag == MarkDownEvents::Heading.as_str() {
+                tag_parsed_string = format!("{}{}\n", tag_parsed_string, parsed_str);
+                rendered_docsite = format!("{}{}", rendered_docsite, tag_parsed_string);
+            }else {
+                tag_parsed_string = format!("{}\n{}", tag_parsed_string, parsed_str);
                 rendered_docsite = format!("{}{}", rendered_docsite, tag_parsed_string);
             }
             tag_parsed_string = "".to_string();
         } else {
+            dbg!("tag closed");
+            dbg!(&current_tag);
             tag_parsed_string = parsed_str;
         }
     }
@@ -267,20 +272,20 @@ pub fn render_to_docsite(
 ) -> (String, String, bool) {
     let mut result_str = String::from("");
     //let mut tag_type = String::from("heading");
-    //dbg!(&event);
+    dbg!(&event);
     match &event {
         Event::Start(tag) => match tag {
             Tag::Heading(heading_level, _fragment_identifier, _class_list) => {
                 tag_started = true;
                 current_tag = MarkDownEvents::Heading.as_str().to_string();
                 result_str = format!(
-                    r##"
-                -- ds.{heading_level}: "##
+                    r##"-- ds.{heading_level}: "##
                 );
             }
             Tag::Paragraph => {
                 tag_started = true;
                 current_tag = MarkDownEvents::Paragraph.as_str().to_string();
+                dbg!("in paragraph");
                 result_str = r##"-- ds.markdown: "##.to_string();
             }
             Tag::Link(link_type, url, _title) => {
@@ -359,17 +364,13 @@ pub fn render_to_docsite(
             tag_started = false;
             if current_tag == *MarkDownEvents::Heading.as_str().to_string() {
                 result_str = format!(
-                    r##" {s}
-                "##,
+                    r##" {s}"##,
                 );
             } else if current_tag == *MarkDownEvents::Link.as_str().to_string() {
                 result_str = format!(r##"[{s}]"##,);
             } else if current_tag == *MarkDownEvents::Paragraph.as_str().to_string() {
                 result_str = format!(
-                    r##"
-
-                {s}
-                "##,
+                    r##"{s}"##,
                 );
             } else {
                 result_str = "".to_string();

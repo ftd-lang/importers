@@ -265,11 +265,9 @@ impl HtmlHandlebars {
         edition: Option<RustEdition>,
         title: &String,
     ) -> String {
-        //dbg!(&rendered);
+dbg!(&title);
         let rendered = embed_title(&rendered, title);
-        //let rendered = build_header_links(&rendered);
-        //let rendered = build_paragraph_with_markdown(&rendered);
-        //dbg!("headers",&rendered);
+
         let rendered = fix_code_blocks(&rendered);
         //dbg!("block",&rendered);
         let rendered = add_playground_pre(&rendered, playground_config, edition);

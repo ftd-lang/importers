@@ -11,8 +11,8 @@ use crate::utils::bracket_escape;
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-/// Load a book into memory from its `src/` directory.
-pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> {
+/// Load a markdown into memory from its `src/` directory.
+pub fn load_makrdown_files<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> {
     let src_dir = src_dir.as_ref();
     let summary_md = src_dir.join("SUMMARY.md");
 
@@ -29,7 +29,7 @@ pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> 
         create_missing(src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
     }
     //create_fpm_ftd(&summary_content,&src_dir).with_context(|| "Unable to copy across static files")?;
-    load_book_from_disk(&summary, src_dir)
+    load_makrdown_files_from_disk(&summary, src_dir)
 }
 fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
     let mut items: Vec<_> = summary
@@ -70,11 +70,8 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
     Ok(())
 }
 
-/// A dumb tree structure representing a book.
+/// A dumb tree structure representing summary.
 ///
-/// For the moment a book is just a collection of [`BookItems`] which are
-/// accessible by either iterating (immutably) over the book with [`iter()`], or
-/// recursively applying a closure to each section to mutate the chapters, using
 /// [`for_each_mut()`].
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct Book {
@@ -210,7 +207,7 @@ impl Chapter {
 ///
 /// You need to pass in the book's source directory because all the links in
 /// `SUMMARY.md` give the chapter locations relative to it.
-pub(crate) fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P) -> Result<Book> {
+pub(crate) fn load_makrdown_files_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P) -> Result<Book> {
     debug!("Loading the book from disk");
     let src_dir = src_dir.as_ref();
 
@@ -302,7 +299,6 @@ fn load_chapter<P: AsRef<Path>>(
 /// # Note
 ///
 /// This struct shouldn't be created directly, instead prefer the
-/// [`Book::iter()`] method.
 pub struct BookItems<'a> {
     items: VecDeque<&'a BookItem>,
 }

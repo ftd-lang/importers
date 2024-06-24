@@ -1,0 +1,10 @@
+[book]
+title = "FTD"
+description = "Markdown importer for FTD"
+authors = ["Wasif Shah"]
+language = "en"
+
+[rust]
+edition = "2018"
+
+
